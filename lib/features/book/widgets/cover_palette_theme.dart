@@ -35,7 +35,12 @@ class _CoverPaletteThemeState extends State<CoverPaletteTheme> {
 
   /// BlurHash 含封面低频色彩，优先用它取色，避免额外下载原图。
   void _syncPalette() {
-    if (!widget.settings.coverColorExtraction) return;
+    if (!widget.settings.coverColorExtraction ||
+        widget.settings.appBackground.path?.isNotEmpty == true) {
+      _paletteKey = null;
+      _coverSeed = null;
+      return;
+    }
     final coverUrl = widget.coverUrl;
     final hash = widget.blurHash?.trim();
     final hasBlurHash = hash != null && hash.isNotEmpty;
@@ -79,7 +84,10 @@ class _CoverPaletteThemeState extends State<CoverPaletteTheme> {
   ThemeData _theme(BuildContext context) {
     final base = Theme.of(context);
     final settings = widget.settings;
-    final seed = settings.coverColorExtraction ? _coverSeed : null;
+    final seed = settings.coverColorExtraction &&
+            settings.appBackground.path?.isNotEmpty != true
+        ? _coverSeed
+        : null;
     if (seed == null) return base;
     final hex = seed.toARGB32().toRadixString(16).padLeft(8, '0').substring(2);
     return buildAppTheme(

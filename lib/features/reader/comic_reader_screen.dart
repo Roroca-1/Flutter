@@ -866,6 +866,9 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
     final shell = ReaderShell(
       background: background,
       imageBackground: readerBackground,
+      onPreviousPage: () => _turn(-1),
+      onNextPage: () => _turn(1),
+      onToggleChrome: () => _chromeVisible.value = !_chromeVisible.value,
       paperTexture: backgroundMode == ReaderBackgroundMode.paper,
       loading: loading || _chapter == null,
       error: loadError,

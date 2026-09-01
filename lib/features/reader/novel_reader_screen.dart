@@ -522,6 +522,9 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
     final shell = ReaderShell(
       background: background,
       imageBackground: settings.readerBackground,
+      onPreviousPage: _contentController.previousPage,
+      onNextPage: _contentController.nextPage,
+      onToggleChrome: () => setState(() => _chromeVisible = !_chromeVisible),
       paperTexture: reader.backgroundMode == ReaderBackgroundMode.paper,
       loading: loading || current == null,
       error: loadError,

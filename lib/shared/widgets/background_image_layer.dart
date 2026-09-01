@@ -35,13 +35,15 @@ class BackgroundImageLayer extends StatelessWidget {
         filterQuality: FilterQuality.medium,
       ),
     );
-    return ClipRect(
-      child: blur <= 0
-          ? image
-          : ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-              child: Transform.scale(scale: 1.08, child: image),
-            ),
+    return RepaintBoundary(
+      child: ClipRect(
+        child: blur <= 0
+            ? image
+            : ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: Transform.scale(scale: 1.08, child: image),
+              ),
+      ),
     );
   }
 }

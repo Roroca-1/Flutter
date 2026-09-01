@@ -210,6 +210,8 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
           flexibleSpace: FlexibleSpaceBar(
             background: BookHero(
               detail: detail,
+              showCoverBackdrop:
+                  ref.read(appSettingsProvider).appBackground.path?.isNotEmpty != true,
               onTitleTap: bundle.isComic ? null : () => _openSeries(bundle),
             ),
             collapseMode: CollapseMode.parallax,

@@ -287,6 +287,25 @@ class ReaderSettingsContent extends ConsumerWidget {
                   },
                 ),
                 SettingsRow(
+                  title: '字体预览',
+                  description: '轻书架Plus · 中文字体预览 · Aa 123',
+                  icon: Icons.preview_outlined,
+                  trailing: Text(
+                    '轻书架Plus',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontFamily: switch (settings.readerFont) {
+                        ReaderFontSetting.system => null,
+                        ReaderFontSetting.serif => 'serif',
+                        ReaderFontSetting.sansSerif => 'sans-serif',
+                        ReaderFontSetting.monospace => 'monospace',
+                        ReaderFontSetting.custom => UserFontRepository.instance
+                            .loadedFamily(settings.customReaderFontPath),
+                      },
+                    ),
+                  ),
+                ),
+                SettingsRow(
                   title: '导入字体',
                   description: '支持 TTF、OTF、TTC、OTC、WOFF 与 WOFF2',
                   icon: Icons.upload_file_outlined,

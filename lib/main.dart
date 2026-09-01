@@ -87,7 +87,24 @@ class LightNovelShelfApp extends ConsumerWidget {
                     blur: appBackground.blur,
                     brightness: appBackground.brightness,
                   ),
-                  child ?? const SizedBox.shrink(),
+                  if (child != null)
+                    switch (defaultTargetPlatform) {
+                      TargetPlatform.linux ||
+                      TargetPlatform.windows ||
+                      TargetPlatform.macOS => MediaQuery.withClampedTextScaling(
+                        minScaleFactor: 1.08,
+                        maxScaleFactor: 1.6,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1600),
+                            child: child,
+                          ),
+                        ),
+                      ),
+                      _ => child,
+                    }
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
             ),

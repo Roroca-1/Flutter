@@ -13,6 +13,7 @@ class BookListRow extends StatelessWidget {
     this.subtitle,
     this.onLongPress,
     this.selected = false,
+    this.onSecondaryTap,
   });
 
   final BookListItem book;
@@ -20,6 +21,7 @@ class BookListRow extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onLongPress;
   final bool selected;
+  final ValueChanged<Offset>? onSecondaryTap;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +38,9 @@ class BookListRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
+        onSecondaryTapDown: onSecondaryTap == null
+            ? null
+            : (details) => onSecondaryTap!(details.globalPosition),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(

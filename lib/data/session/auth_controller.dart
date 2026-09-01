@@ -157,7 +157,9 @@ class AuthController extends ChangeNotifier {
       }
       _publish(
         AuthenticationSnapshot(
-          status: AuthenticationStatus.signedOut,
+          // 网络错误不能证明账号已退出；保留本地会话与缓存页面，只有服务端明确
+          // 返回无效凭据时才进入 signedOut。
+          status: AuthenticationStatus.authenticated,
           error: error is ApiError ? error.message : '无法恢复登录状态。',
         ),
       );

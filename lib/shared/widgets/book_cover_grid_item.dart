@@ -26,6 +26,7 @@ class BookCoverGridItem extends StatelessWidget {
     this.rank,
     this.onTap,
     this.onLongPress,
+    this.onSecondaryTap,
     this.selected = false,
     this.sorting = false,
     this.overlayLabel,
@@ -38,6 +39,7 @@ class BookCoverGridItem extends StatelessWidget {
     this.rank,
     this.onTap,
     this.onLongPress,
+    this.onSecondaryTap,
     this.selected = false,
     this.sorting = false,
     this.overlayLabel,
@@ -60,6 +62,7 @@ class BookCoverGridItem extends StatelessWidget {
   final int? rank;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final ValueChanged<Offset>? onSecondaryTap;
   final bool selected;
   final bool sorting;
   final String? overlayLabel;
@@ -77,6 +80,9 @@ class BookCoverGridItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
+      onSecondaryTapDown: onSecondaryTap == null
+          ? null
+          : (details) => onSecondaryTap!(details.globalPosition),
       borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisSize: MainAxisSize.min,

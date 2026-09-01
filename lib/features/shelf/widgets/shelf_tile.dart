@@ -22,6 +22,7 @@ class ShelfTile extends ConsumerWidget {
     required this.onOpenBook,
     required this.onOpenFolder,
     this.selectable = true,
+    this.onBookContextMenu,
   });
 
   final String editorKey;
@@ -38,6 +39,7 @@ class ShelfTile extends ConsumerWidget {
   final void Function(BookListItem book) onOpenBook;
   final void Function(String folderId) onOpenFolder;
   final bool selectable;
+  final void Function(BookListItem book, Offset position)? onBookContextMenu;
 
   /// 选择模式下点击是切换选中；`open` 为空表示条目已下架，只能被选中。
   void _handleTap(WidgetRef ref, VoidCallback? open) {
@@ -87,6 +89,9 @@ class ShelfTile extends ConsumerWidget {
           sorting: sorting,
           onTap: () => _handleTap(ref, () => onOpenBook(resolved)),
           onLongPress: beginSelection,
+          onSecondaryTap: onBookContextMenu == null
+              ? null
+              : (position) => onBookContextMenu!(resolved, position),
         );
       }
     } else {

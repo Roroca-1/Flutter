@@ -307,6 +307,38 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     context.push('/book/${book.id}?type=Novel');
   }
 
+  Future<void> _showBookMenu(BookListItem book, Offset position) async {
+    final item = ref
+        .read(shelfProvider)
+        .value
+        ?.items
+        .where((entry) => entry.bookId == book.id)
+        .firstOrNull;
+    final action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, 0),
+      items: <PopupMenuEntry<String>>[
+        const PopupMenuItem(value: 'read', child: ListTile(leading: Icon(Icons.play_arrow), title: Text('阅读'))),
+        if (book.seriesTitle?.trim().isNotEmpty == true)
+          const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.library_books_outlined), title: Text('搜索系列'))),
+        const PopupMenuItem(enabled: false, child: ListTile(leading: Icon(Icons.bookmark_added_outlined), title: Text('已在书架'))),
+        const PopupMenuItem(value: 'remove', child: ListTile(leading: Icon(Icons.remove_circle_outline), title: Text('移出书架'))),
+        const PopupMenuItem(value: 'select', child: ListTile(leading: Icon(Icons.checklist_outlined), title: Text('多选'))),
+      ],
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case 'read':
+        context.push('/reader/${book.id}/1${book.type == BookType.comic ? '?type=Comic' : ''}');
+      case 'series':
+        context.push(Uri(path: '/books/series', queryParameters: <String, String>{'name': book.seriesTitle!.trim(), 'order': BookListOrder.latest.wire}).toString());
+      case 'remove':
+        await ref.read(shelfProvider.notifier).removeBooks(<int>[book.id]);
+      case 'select':
+        if (item != null) _editor.beginSelection(item);
+    }
+  }
+
   void _openShelfSeries(String name, List<BookListItem> books) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -693,6 +725,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                   onOpenBook: _openBook,
                   onOpenFolder: _openFolder,
                   selectable: (item.bookId ?? 0) >= 0,
+                  onBookContextMenu: _showBookMenu,
                 ),
               ),
             ),
@@ -728,6 +761,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
               final selected = _state.selected.contains(item.key);
               return BookListRow(
                 book: book,
+                onSecondaryTap: (position) => _showBookMenu(book, position),
                 selected: selected,
                 onLongPress: () => _editor.beginSelection(item),
                 onTap: () => _state.mode == ShelfMode.select

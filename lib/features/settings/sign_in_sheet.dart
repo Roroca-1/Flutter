@@ -145,7 +145,10 @@ class _SignInSheetState extends ConsumerState<_SignInSheet> {
       final result = await ref.read(profileProvider.notifier).checkIn();
       await _loadCalendar();
       if (!mounted) return;
-      _showMessage('签到成功，连签 ${result.streak} 天');
+      _showMessage(
+        '签到成功，获得 ${result.experience} 经验和 ${result.reward} 金币，'
+        '连签 ${result.streak} 天',
+      );
     } catch (error) {
       if (mounted) _showMessage(describeApiError(error), error: true);
     } finally {

@@ -17,9 +17,15 @@ const double bookHeroHeight = 280;
 const double bookCoverDisplayHeight = 150;
 
 class BookHero extends StatelessWidget {
-  const BookHero({super.key, required this.detail, this.onTitleTap});
+  const BookHero({
+    super.key,
+    required this.detail,
+    this.onTitleTap,
+    this.showCoverBackdrop = true,
+  });
 
   final BookDetail detail;
+  final bool showCoverBackdrop;
 
   /// 点标题打开系列列表，为空时标题为普通文本。
   final VoidCallback? onTitleTap;
@@ -72,7 +78,7 @@ class BookHero extends StatelessWidget {
       fit: StackFit.expand,
       children: <Widget>[
         ColoredBox(color: colors.surface),
-        if (detail.coverUrl.isNotEmpty)
+        if (showCoverBackdrop && detail.coverUrl.isNotEmpty)
           ImageFiltered(
             imageFilter: ui.ImageFilter.blur(sigmaX: 28, sigmaY: 28),
             child: Opacity(

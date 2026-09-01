@@ -23,6 +23,9 @@ class ReaderShell extends StatelessWidget {
     required this.body,
     this.chrome,
     this.overlay,
+    this.onPreviousPage,
+    this.onNextPage,
+    this.onToggleChrome,
   });
 
   final Color background;
@@ -40,6 +43,9 @@ class ReaderShell extends StatelessWidget {
 
   /// 正文之上、工具栏之下的常驻信息，需自带定位。
   final Widget? overlay;
+  final VoidCallback? onPreviousPage;
+  final VoidCallback? onNextPage;
+  final VoidCallback? onToggleChrome;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +70,26 @@ class ReaderShell extends StatelessWidget {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Stack(
+        body: CallbackShortcuts(
+          bindings: <ShortcutActivator, VoidCallback>{
+            const SingleActivator(LogicalKeyboardKey.arrowLeft):
+                onPreviousPage ?? () {},
+            const SingleActivator(LogicalKeyboardKey.pageUp):
+                onPreviousPage ?? () {},
+            const SingleActivator(LogicalKeyboardKey.arrowRight):
+                onNextPage ?? () {},
+            const SingleActivator(LogicalKeyboardKey.pageDown):
+                onNextPage ?? () {},
+            const SingleActivator(LogicalKeyboardKey.space):
+                onNextPage ?? () {},
+            const SingleActivator(LogicalKeyboardKey.space, shift: true):
+                onPreviousPage ?? () {},
+            const SingleActivator(LogicalKeyboardKey.escape):
+                onToggleChrome ?? () {},
+          },
+          child: Focus(
+            autofocus: true,
+            child: Stack(
           children: <Widget>[
             Positioned.fill(child: ColoredBox(color: background)),
             if (imageBackground?.path?.isNotEmpty == true)
@@ -86,6 +111,8 @@ class ReaderShell extends StatelessWidget {
             ?overlay,
             ?chrome,
           ],
+            ),
+          ),
         ),
       ),
     );

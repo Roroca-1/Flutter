@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
 import '../api/models.dart';
 import '../providers.dart';
+
+/// 自动签到成功事件。主页消费后清空，避免切换页面重复弹窗。
+final ValueNotifier<DailyCheckInResult?> autoCheckInResult =
+    ValueNotifier<DailyCheckInResult?>(null);
 
 /// 当前账号资料；未登录时保持 `null`。
 class ProfileController extends AsyncNotifier<UserProfile?> {
@@ -29,7 +34,8 @@ class ProfileController extends AsyncNotifier<UserProfile?> {
     var profile = await _api.getMyProfile();
     if (!profile.growth.signedToday) {
       try {
-        await _api.checkIn();
+        final result = await _api.checkIn();
+        autoCheckInResult.value = result;
         profile = await _api.getMyProfile();
       } catch (_) {
         // 自动签到不能阻止应用启动；网络恢复后下次重建资料时会再尝试。
