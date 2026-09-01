@@ -15,7 +15,16 @@ class ProfileController extends AsyncNotifier<UserProfile?> {
       authSnapshotProvider.select((snapshot) => snapshot.isAuthenticated),
     );
     if (!authenticated) return null;
-    return _api.getMyProfile();
+    var profile = await _api.getMyProfile();
+    if (!profile.growth.signedToday) {
+      try {
+        await _api.checkIn();
+        profile = await _api.getMyProfile();
+      } catch (_) {
+        // 自动签到不能阻止应用启动；网络恢复后下次重建资料时会再尝试。
+      }
+    }
+    return profile;
   }
 
   Future<void> reload() async {

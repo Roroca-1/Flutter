@@ -485,6 +485,8 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
       context,
       mode: reader.backgroundMode,
       customColorValue: reader.backgroundColorValue,
+      customTextColorEnabled: reader.customTextColorEnabled,
+      textColorValue: reader.textColorValue,
       oledBlack: settings.oledBlack,
     );
     final paged = reader.viewMode == ReaderViewMode.paged;

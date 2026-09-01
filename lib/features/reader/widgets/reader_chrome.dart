@@ -22,8 +22,13 @@ class ReaderPaperPalette {
   BuildContext context, {
   required ReaderBackgroundMode mode,
   required String customColorValue,
+  required bool customTextColorEnabled,
+  required String textColorValue,
   required bool oledBlack,
 }) {
+  Color applyTextColor(Color automatic) => customTextColorEnabled
+      ? parseSeedColor(textColorValue)
+      : automatic;
   switch (mode) {
     case ReaderBackgroundMode.auto:
       final theme = Theme.of(context);
@@ -31,21 +36,24 @@ class ReaderPaperPalette {
       final colors = theme.colorScheme;
       return (
         background: oled ? Colors.black : colors.surface,
-        foreground: oled ? Colors.white : colors.onSurface,
+        foreground: applyTextColor(oled ? Colors.white : colors.onSurface),
       );
     case ReaderBackgroundMode.paper:
       return Theme.of(context).brightness == Brightness.dark
           ? (
               background: ReaderPaperPalette.darkBackground,
-              foreground: ReaderPaperPalette.darkForeground,
+              foreground: applyTextColor(ReaderPaperPalette.darkForeground),
             )
           : (
               background: ReaderPaperPalette.lightBackground,
-              foreground: ReaderPaperPalette.lightForeground,
+              foreground: applyTextColor(ReaderPaperPalette.lightForeground),
             );
     case ReaderBackgroundMode.custom:
       final background = parseSeedColor(customColorValue);
-      return (background: background, foreground: onAccentColor(background));
+      return (
+        background: background,
+        foreground: applyTextColor(onAccentColor(background)),
+      );
   }
 }
 

@@ -10,25 +10,18 @@ import '../../data/providers.dart';
 import '../../data/repositories/shelf_draft.dart';
 import '../../data/repositories/shelf_repository.dart';
 import '../../data/repositories/local_comic_shelf_repository.dart';
+import '../../data/settings/app_settings.dart';
 import '../../shared/layout/book_grid_layout.dart';
 import '../../shared/paging/identity_child_delegate.dart';
 import '../../shared/widgets/app_dialogs.dart';
 import '../../shared/widgets/book_grid_slivers.dart';
+import '../../shared/widgets/book_list_row.dart';
 import '../../shared/widgets/state_views.dart';
 import '../discover/widgets/novel_series_tile.dart';
 import 'shelf_editor_controller.dart';
 import 'shelf_series_books_screen.dart';
 import 'widgets/shelf_manage_sheet.dart';
 import 'widgets/shelf_tile.dart';
-
-enum ShelfSortMode {
-  manual,
-  titleAscending,
-  titleDescending,
-  updatedNewest,
-  updatedOldest,
-  addedNewest,
-}
 
 /// 书架页：根目录（`parents` 为空）与任意层级文件夹共用同一个界面。
 class ShelfScreen extends ConsumerStatefulWidget {
@@ -42,20 +35,26 @@ class ShelfScreen extends ConsumerStatefulWidget {
 }
 
 class _ShelfScreenState extends ConsumerState<ShelfScreen> {
-  bool _seriesView = false;
-  ShelfSortMode _sort = ShelfSortMode.manual;
   bool _romanizerReady = false;
   bool _romanizerLoading = false;
   final Map<String, String> _sortKeyCache = <String, String>{};
 
-  void _setSort(ShelfSortMode value) {
-    setState(() {
-      _sort = value;
-      _sortKeyCache.clear();
-    });
+  ShelfSortSetting get _sort => ref.read(appSettingsProvider).shelfSort;
+
+  bool get _seriesView =>
+      ref.read(appSettingsProvider).shelfSeriesView;
+
+  BookDisplayMode get _displayMode =>
+      ref.read(appSettingsProvider).shelfDisplayMode;
+
+  void _setSort(ShelfSortSetting value) {
+    _sortKeyCache.clear();
+    ref
+        .read(settingsControllerProvider)
+        .update((settings) => settings.copyWith(shelfSort: value));
     final needsRomanizer =
-        value == ShelfSortMode.titleAscending ||
-        value == ShelfSortMode.titleDescending;
+        value == ShelfSortSetting.titleAscending ||
+        value == ShelfSortSetting.titleDescending;
     if (!needsRomanizer || _romanizerReady || _romanizerLoading) return;
     _romanizerLoading = true;
     unawaited(
@@ -101,24 +100,24 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     final titleOrder = _titleSortKey(_itemTitle(left, level))
         .compareTo(_titleSortKey(_itemTitle(right, level)));
     final order = switch (_sort) {
-      ShelfSortMode.manual => left.index.compareTo(right.index),
-      ShelfSortMode.titleAscending => titleOrder,
-      ShelfSortMode.titleDescending => -titleOrder,
-      ShelfSortMode.updatedNewest => _updatedAt(
+      ShelfSortSetting.manual => left.index.compareTo(right.index),
+      ShelfSortSetting.titleAscending => titleOrder,
+      ShelfSortSetting.titleDescending => -titleOrder,
+      ShelfSortSetting.updatedNewest => _updatedAt(
         right,
         level,
       ).compareTo(_updatedAt(left, level)),
-      ShelfSortMode.updatedOldest => _updatedAt(
+      ShelfSortSetting.updatedOldest => _updatedAt(
         left,
         level,
       ).compareTo(_updatedAt(right, level)),
-      ShelfSortMode.addedNewest => _addedAt(right).compareTo(_addedAt(left)),
+      ShelfSortSetting.addedNewest => _addedAt(right).compareTo(_addedAt(left)),
     };
     return order != 0 ? order : titleOrder;
   }
 
   List<ShelfItem> _sortedSiblings(ShelfLevel level) {
-    if (_sort == ShelfSortMode.manual) return level.siblings;
+    if (_sort == ShelfSortSetting.manual) return level.siblings;
     return List<ShelfItem>.of(level.siblings)
       ..sort((left, right) => _compareShelfItems(left, right, level));
   }
@@ -415,6 +414,23 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final shelfPreferences = ref.watch(
+      appSettingsProvider.select(
+        (settings) => (
+          settings.shelfSort,
+          settings.shelfSeriesView,
+          settings.shelfDisplayMode,
+        ),
+      ),
+    );
+    if ((shelfPreferences.$1 == ShelfSortSetting.titleAscending ||
+            shelfPreferences.$1 == ShelfSortSetting.titleDescending) &&
+        !_romanizerReady &&
+        !_romanizerLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _setSort(shelfPreferences.$1);
+      });
+    }
     final authenticated = ref.watch(authSnapshotProvider).isAuthenticated;
     final async = ref.watch(shelfProvider);
     final editor = ref.watch(shelfEditorProvider(_editorKey));
@@ -445,11 +461,38 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             if (snapshot != null && editor.mode == ShelfMode.browse)
               IconButton(
                 tooltip: _seriesView ? '按单本显示' : '按系列显示',
-                onPressed: () => setState(() => _seriesView = !_seriesView),
+                onPressed: () => ref
+                    .read(settingsControllerProvider)
+                    .update(
+                      (settings) => settings.copyWith(
+                        shelfSeriesView: !settings.shelfSeriesView,
+                      ),
+                    ),
                 icon: Icon(
                   _seriesView
                       ? Icons.grid_view_outlined
                       : Icons.folder_copy_outlined,
+                ),
+              ),
+            if (snapshot != null && editor.mode == ShelfMode.browse)
+              IconButton(
+                tooltip: _displayMode == BookDisplayMode.grid
+                    ? '切换到列表视图'
+                    : '切换到网格视图',
+                onPressed: () => ref
+                    .read(settingsControllerProvider)
+                    .update(
+                      (settings) => settings.copyWith(
+                        shelfDisplayMode:
+                            settings.shelfDisplayMode == BookDisplayMode.grid
+                            ? BookDisplayMode.list
+                            : BookDisplayMode.grid,
+                      ),
+                    ),
+                icon: Icon(
+                  _displayMode == BookDisplayMode.grid
+                      ? Icons.view_list_outlined
+                      : Icons.grid_view_outlined,
                 ),
               ),
             if (dirty && !editor.saving)
@@ -557,7 +600,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
       bookById: <int, BookListItem>{...level.bookById, ...localBooks},
       folderPreviews: level.folderPreviews,
     );
-    final siblings = _sort == ShelfSortMode.manual
+    final siblings = _sort == ShelfSortSetting.manual
         ? displayLevel.siblings
         : (List<ShelfItem>.of(displayLevel.siblings)..sort(
             (left, right) => _compareShelfItems(left, right, displayLevel),
@@ -631,7 +674,12 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             ),
           )
         else if (_seriesView && editor.mode == ShelfMode.browse)
-          _seriesGrid(displayLevel, layout, siblings)
+          _displayMode == BookDisplayMode.list
+              ? _seriesList(displayLevel, siblings)
+              : _seriesGrid(displayLevel, layout, siblings)
+        else if (_displayMode == BookDisplayMode.list &&
+            editor.mode == ShelfMode.browse)
+          _bookList(displayLevel, siblings)
         else
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
@@ -668,6 +716,129 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     );
   }
 
+  Widget _bookList(ShelfLevel level, List<ShelfItem> siblings) =>
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(
+          BookGridLayout.horizontalPadding,
+          0,
+          BookGridLayout.horizontalPadding,
+          32,
+        ),
+        sliver: SliverList.separated(
+          itemCount: siblings.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final item = siblings[index];
+            if (item.isBook) {
+              final book = level.bookById[item.bookId];
+              if (book == null) {
+                return const Card(
+                  margin: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: Icon(Icons.book_outlined),
+                    title: Text('书籍已下架'),
+                  ),
+                );
+              }
+              return BookListRow(book: book, onTap: () => _openBook(book));
+            }
+            final title = item.title.trim();
+            return Card(
+              margin: EdgeInsets.zero,
+              child: ListTile(
+                onTap: () => _openFolder(item.folderId!),
+                leading: const Icon(Icons.folder_outlined),
+                title: Text(title.isEmpty ? '未命名文件夹' : title),
+                subtitle: Text(
+                  '${level.folderPreviews[item.folderId]?.count ?? 0} 本书',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+              ),
+            );
+          },
+        ),
+      );
+
+  Widget _seriesList(ShelfLevel level, List<ShelfItem> siblings) {
+    final grouped = <String, List<BookListItem>>{};
+    final entries = <Object>[];
+    for (final item in siblings) {
+      final book = item.isBook ? level.bookById[item.bookId] : null;
+      final name = book?.type == BookType.novel
+          ? book?.seriesTitle?.trim()
+          : null;
+      if (book == null || name == null || name.isEmpty) {
+        entries.add(item);
+        continue;
+      }
+      grouped.putIfAbsent(name, () {
+        entries.add(name);
+        return <BookListItem>[];
+      }).add(book);
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(
+        BookGridLayout.horizontalPadding,
+        0,
+        BookGridLayout.horizontalPadding,
+        32,
+      ),
+      sliver: SliverList.separated(
+        itemCount: entries.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          if (entry is! String) {
+            final item = entry as ShelfItem;
+            if (!item.isBook) {
+              final title = item.title.trim();
+              return Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  onTap: () => _openFolder(item.folderId!),
+                  leading: const Icon(Icons.folder_outlined),
+                  title: Text(title.isEmpty ? '未命名文件夹' : title),
+                  subtitle: Text(
+                    '${level.folderPreviews[item.folderId]?.count ?? 0} 本书',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                ),
+              );
+            }
+            final book = level.bookById[item.bookId];
+            return book == null
+                ? const SizedBox.shrink()
+                : BookListRow(book: book, onTap: () => _openBook(book));
+          }
+          final books = grouped[entry]!;
+          final latest = books.reduce(
+            (left, right) => left.lastUpdatedAt.isAfter(right.lastUpdatedAt)
+                ? left
+                : right,
+          );
+          final series = BookListItem(
+            id: latest.id,
+            type: BookType.novel,
+            title: entry,
+            seriesTitle: entry,
+            coverUrl: latest.coverUrl,
+            coverPlaceholder: latest.coverPlaceholder,
+            authorName: null,
+            lastUpdatedAt: latest.lastUpdatedAt,
+            level: null,
+            interiorLevel: null,
+            category: null,
+          );
+          return BookListRow(
+            book: series,
+            subtitle: '${books.length} 本',
+            onTap: () => _openShelfSeries(entry, books),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _seriesGrid(
     ShelfLevel level,
     BookGridLayout layout,
@@ -695,7 +866,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
       books.add(book);
     }
 
-    if (_sort != ShelfSortMode.manual) {
+    if (_sort != ShelfSortSetting.manual) {
       String titleOf(Object entry) =>
           entry is String ? entry : _itemTitle(entry as ShelfItem, level);
       DateTime addedAt(Object entry) => entry is String
@@ -720,16 +891,16 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         final titleOrder = _titleSortKey(titleOf(left))
             .compareTo(_titleSortKey(titleOf(right)));
         final order = switch (_sort) {
-          ShelfSortMode.manual => 0,
-          ShelfSortMode.titleAscending => titleOrder,
-          ShelfSortMode.titleDescending => -titleOrder,
-          ShelfSortMode.updatedNewest => updatedAt(
+          ShelfSortSetting.manual => 0,
+          ShelfSortSetting.titleAscending => titleOrder,
+          ShelfSortSetting.titleDescending => -titleOrder,
+          ShelfSortSetting.updatedNewest => updatedAt(
             right,
           ).compareTo(updatedAt(left)),
-          ShelfSortMode.updatedOldest => updatedAt(
+          ShelfSortSetting.updatedOldest => updatedAt(
             left,
           ).compareTo(updatedAt(right)),
-          ShelfSortMode.addedNewest => addedAt(right).compareTo(addedAt(left)),
+          ShelfSortSetting.addedNewest => addedAt(right).compareTo(addedAt(left)),
         };
         return order != 0 ? order : titleOrder;
       });
@@ -787,27 +958,28 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
 class _ShelfSortMenu extends StatelessWidget {
   const _ShelfSortMenu({required this.value, required this.onChanged});
 
-  final ShelfSortMode value;
-  final ValueChanged<ShelfSortMode> onChanged;
+  final ShelfSortSetting value;
+  final ValueChanged<ShelfSortSetting> onChanged;
 
-  static const Map<ShelfSortMode, String> _labels = <ShelfSortMode, String>{
-    ShelfSortMode.manual: '手动顺序',
-    ShelfSortMode.titleAscending: '标题 A–Z（拼音/罗马字）',
-    ShelfSortMode.titleDescending: '标题 Z–A（拼音/罗马字）',
-    ShelfSortMode.updatedNewest: '最近更新',
-    ShelfSortMode.updatedOldest: '最早更新',
-    ShelfSortMode.addedNewest: '最近加入',
+  static const Map<ShelfSortSetting, String> _labels =
+      <ShelfSortSetting, String>{
+    ShelfSortSetting.manual: '手动顺序',
+    ShelfSortSetting.titleAscending: '标题 A–Z（拼音/罗马字）',
+    ShelfSortSetting.titleDescending: '标题 Z–A（拼音/罗马字）',
+    ShelfSortSetting.updatedNewest: '最近更新',
+    ShelfSortSetting.updatedOldest: '最早更新',
+    ShelfSortSetting.addedNewest: '最近加入',
   };
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton<ShelfSortMode>(
+  Widget build(BuildContext context) => PopupMenuButton<ShelfSortSetting>(
     tooltip: '书架排序',
     icon: const Icon(Icons.sort),
     position: PopupMenuPosition.under,
     onSelected: onChanged,
-    itemBuilder: (_) => <PopupMenuEntry<ShelfSortMode>>[
+    itemBuilder: (_) => <PopupMenuEntry<ShelfSortSetting>>[
       for (final entry in _labels.entries)
-        PopupMenuItem<ShelfSortMode>(
+        PopupMenuItem<ShelfSortSetting>(
           value: entry.key,
           child: ListTile(
             dense: true,
