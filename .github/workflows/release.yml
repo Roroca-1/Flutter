@@ -1,15 +1,23 @@
-name: Publish Android ARM64 release
+name: Release
 
 on:
   push:
-    branches:
-      - feat/library-series-multi-select
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要发布的版本标签
+        required: true
+        type: string
 
 permissions:
   contents: write
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
 concurrency:
-  group: android-arm64-public-release
+  group: release-${{ github.ref }}-${{ inputs.tag }}
   cancel-in-progress: false
 
 jobs:
@@ -17,12 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      RELEASE_TAG: v1.8.0-shelf.1
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - uses: actions/setup-java@v5
         with:
@@ -35,53 +44,86 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Configure optional Android signing
+      - name: 检查签名配置
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] \
-            || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
-            echo "No release keystore configured; using the repository's debug-signing fallback."
-            exit 0
-          fi
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
-          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
 
-      - name: Build Android ARM64 APK
-        run: >
-          flutter build apk
-          --release
-          --target-platform android-arm64
-          --split-per-abi
+      - name: 构建 Android 安装包
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+        run: flutter build apk --release --split-per-abi
 
-      - name: Rename APK
+      - name: 收集产物
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-            dist/LightNovelShelf-v1.8.0-shelf.1-arm64-v8a.apk
+          for apk in build/app/outputs/flutter-apk/app-*-release.apk; do
+            abi=$(basename "$apk" | sed -E 's/^app-(.+)-release\.apk$/\1/')
+            cp "$apk" "dist/app-android-$abi.apk"
+          done
 
       - uses: actions/upload-artifact@v5
         with:
-          name: LightNovelShelf-v1.8.0-shelf.1-arm64-v8a
-          path: dist/LightNovelShelf-v1.8.0-shelf.1-arm64-v8a.apk
+          name: lightnovel-shelf-${{ env.RELEASE_TAG }}-android
+          path: dist
           retention-days: 30
 
-      - name: Publish public GitHub release
-        uses: softprops/action-gh-release@v2
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.0
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # 无 Apple 开发者账号，只出未签名 IPA，供自签工具安装。
+      - run: flutter build ios --release --no-codesign
+
+      - name: 打包 IPA
+        run: |
+          mkdir -p dist/Payload
+          cp -R build/ios/iphoneos/Runner.app dist/Payload/
+          cd dist
+          zip -qry app-ios-unsigned.ipa Payload
+          rm -rf Payload
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: lightnovel-shelf-${{ env.RELEASE_TAG }}-ios
+          path: dist
+          retention-days: 30
+
+  publish:
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: lightnovel-shelf-${{ env.RELEASE_TAG }}-*
+          merge-multiple: true
+          path: dist
+
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          target_commitish: ${{ github.sha }}
-          name: LightNovelShelf 1.8.0 Shelf Edition 1
-          body: |
-            Android ARMv8-A release based on upstream LightNovelShelf 1.8.0.
-
-            Includes series grouping and multi-selection on discovery and shelf pages,
-            plus view-only shelf sorting by pinyin/romaji, update time, and added time.
-          prerelease: false
-          make_latest: true
+          generate_release_notes: true
           fail_on_unmatched_files: true
-          files: dist/LightNovelShelf-v1.8.0-shelf.1-arm64-v8a.apk
+          files: dist/*
