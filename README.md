@@ -1,36 +1,210 @@
-# 轻书架
+# 轻书架Plus
 
-轻书架官方 Flutter 客户端的功能拓展版本。目前面向 Android, Windows, Linux平台进行测试，iOS和macOS平台需要自行编译测试。
+轻书架Plus 是基于[轻书架官方 Flutter 客户端](https://github.com/LightNovelShelf/Flutter)继续开发的独立功能扩展版本，重点改善书架管理、桌面端操作、自定义外观与离线缓存体验。
 
+当前正式支持：
 
-## 功能
-支持在书架页显示系列而非单卷\
-支持在书架页以标题，加入日期，更新日期排序\
-支持漫画加入本地书架\
-书架批量管理\
-支持列表呈现方式\
-自动签到\
-自定义字体\
-自定义字体颜色\
-自定义应用主题\
-缓存和加载速度优化
+- Android ARM64（`arm64-v8a`）
+- Linux x86_64（AppImage）
+- Windows x86_64
 
+项目包名为 `lightnovel_shelf_plus`，Android 应用标识为 `app.lightnovel.shelf.plus`，因此可以与官方版轻书架同时安装。项目不再构建或发布 iOS、macOS 软件包。
 
-提交新功能：\
-等你发issue呢
+## 相较官方版新增的功能
 
-## 开发
+### 书架与系列管理
+
+- 书架支持“单本 / 系列”显示，并记住上次选择。
+- 书架与历史记录支持“网格 / 列表”显示，并记住上次选择。
+- 系列内也支持网格和列表模式；从书架打开系列后始终按标题排序，以保持卷册阅读顺序。
+- “全部小说”提供相互独立的“单本 / 系列”和“网格 / 列表”开关，可自由组合。
+- 在发现页系列中长按进入多选，支持选择多个卷册、全选并批量加入书架。
+- 书架单本模式和系列子页均支持多选、全选与批量移出书架。
+- 书架排序为纯显示排序，不修改服务端手动顺序：
+  - 手动顺序
+  - 标题升序、降序（中文优先按拼音；检测到假名时使用罗马字）
+  - 最近更新、最早更新
+  - 最近加入
+- 漫画可加入本地书架，不调用只适用于小说系列的功能。
+- 列表条目补充作者、更新时间等信息；系列条目显示卷数和更新时间。
+
+### 浏览与阅读
+
+- 发现、排行榜、全部小说、系列、书架和历史等书籍入口支持桌面端右键菜单。
+- 右键菜单可直接阅读（跳过详情页）、搜索系列、加入/移出书架或进入多选。
+- 阅读页支持独立文字颜色设置。
+- 应用背景与阅读背景分别设置，也可以一键同步。
+- 背景图片支持亮度、低成本模糊和 Material You 配色提取。
+- 设置自定义应用背景后，详情页只使用应用背景；未设置时保留原有模糊封面背景。
+- 自动签到：应用启动后自动执行，成功时显示获得的经验、金币、连续签到天数和等级。
+
+### 外观与桌面适配
+
+- 支持自定义 Material 3 / Material You 主题色、系统动态配色和 OLED 纯黑模式。
+- Linux、Windows 使用更适合键鼠与高 DPI 显示器的宽屏布局和文字缩放。
+- 桌面端支持键盘焦点浏览、连续选择和右键快捷操作。
+- Linux/Windows 专属键鼠代码不会在 Android 上启用。
+- 应用名称、包名、图标和仓库链接均使用“轻书架Plus”品牌。
+
+### 缓存与性能
+
+- 首页、书架、阅读历史和个人资料优先显示本地缓存，再在后台刷新服务端数据。
+- 登录状态尚在恢复时继续显示缓存内容，减少短暂出现“登录后查看书架”的情况。
+- 优化封面图片缓存、尺寸请求、预解码和漫画阅读预加载。
+- 优化书架草稿、系列分组与页面间切换，减少不必要的全页重建。
+- 自定义背景会压缩导入尺寸并复用已解码图片，降低内存、模糊和路由切换开销。
+- 设置中提供清除全部缓存、图片缓存和阅读字体缓存的入口。
+
+### 暂停启用的实验功能
+
+自定义阅读字体的导入、预览和加载源码仍保留在仓库中，但正式构建默认关闭。服务端部分章节使用随章节变化的私有 Unicode 字形映射，普通字体无法可靠还原正确字符。需要研究此功能时可自行使用：
 
 ```bash
+flutter run --dart-define=ENABLE_READER_FONTS=true
+```
+
+该参数不应加入公开 Release，除非字符映射问题已经得到完整解决。
+
+## Linux / Windows 键鼠操作
+
+键鼠功能仅在 Linux 和 Windows 启用。
+
+### 应用与书籍列表
+
+| 操作 | 功能 |
+| --- | --- |
+| `Ctrl+Tab` | 向右循环切换发现、书架、历史、社区、搜索 |
+| `Ctrl+Shift+Tab` | 向左循环切换底栏 |
+| `Tab` / `Shift+Tab` | 在当前页面可操作条目间向前 / 向后移动焦点 |
+| `Enter` | 打开当前聚焦条目 |
+| `Space` | 在书架中选择 / 取消选择当前书籍，并自动进入选择模式 |
+| `Ctrl+A` | 在书架选择模式中选择当前层级全部可用书籍 |
+| `Ctrl+单击` | 添加或取消一个书架条目的选择 |
+| `Shift+单击` | 从上一个选择锚点连续选择到当前书架条目 |
+| `Esc` | 退出选择模式；没有选择状态时返回上一级 |
+| 鼠标右键 | 在鼠标位置打开书籍快捷菜单 |
+
+### 小说阅读器
+
+| 操作 | 功能 |
+| --- | --- |
+| `←` / `Page Up` | 上一页或上一屏 |
+| `→` / `Page Down` | 下一页或下一屏 |
+| `Space` | 下一页或下一屏 |
+| `Shift+Space` | 上一页或上一屏 |
+| `Esc` | 第一次显示阅读菜单；菜单已显示时返回书籍详情页 |
+
+## 本地开发与检查
+
+项目 CI 使用 Flutter `3.47.0` 和 Java 17。建议本地使用相同版本：
+
+```bash
+flutter --version
 flutter pub get
+flutter analyze
+flutter test
 flutter run -d <device>
 ```
 
-注入刷新令牌：
+如需注入刷新令牌：
 
 ```bash
-flutter run --dart-define=REFRESH_TOKEN=<refresh token>
+flutter run -d <device> --dart-define=REFRESH_TOKEN=<refresh-token>
 ```
+
+## 编译 Android ARM64
+
+需要 Android SDK、Java 17，并确保 `flutter doctor -v` 能识别 Android toolchain。
+
+```bash
+flutter pub get
+flutter build apk --release \
+  --target-platform android-arm64 \
+  --split-per-abi
+```
+
+输出：
+
+```text
+build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+```
+
+未配置仓库签名密钥时，项目使用现有的调试签名回退。这样的 APK 可以测试安装，但可能无法覆盖安装使用其他证书签名的版本。
+
+## 编译 Linux x86_64
+
+Arch / CachyOS 依赖：
+
+```bash
+sudo pacman -S --needed \
+  clang cmake ninja pkgconf gtk3 libsecret \
+  base-devel git curl unzip xz zip
+```
+
+编译 release bundle：
+
+```bash
+flutter config --enable-linux-desktop
+flutter pub get
+flutter build linux --release
+```
+
+输出目录：
+
+```text
+build/linux/x64/release/bundle/
+```
+
+仓库的 Release workflow 会使用 `linuxdeploy` 将此 bundle 封装为 x86_64 AppImage。
+
+## 编译 Windows x86_64
+
+需要 Windows 10/11、Visual Studio 2022，并安装“使用 C++ 的桌面开发”工作负载：
+
+```powershell
+flutter config --enable-windows-desktop
+flutter pub get
+flutter build windows --release
+```
+
+输出目录：
+
+```text
+build\windows\x64\runner\Release\
+```
+
+发布时必须保留该目录中的 EXE、DLL 和 `data` 文件夹，不能只复制可执行文件。
+
+## GitHub Actions 测试与发布
+
+每次推送到 `main`，`CI` workflow 会执行：
+
+- `flutter analyze`
+- `flutter test`
+- Android ARM64 debug APK
+- Linux x86_64 debug bundle
+- Windows x86_64 debug bundle
+
+手动发布正式版本：
+
+1. 打开仓库的 **Actions → Release → Run workflow**。
+2. 在 `tag` 中输入版本，例如 `v1.8.1-plus.1`。
+3. 首次验证保持 `publish=false`：构建三端 release artifacts，但不创建公开 Release。
+4. 确认成功后重新运行并选择 `publish=true`：三端全部成功后创建公开 Release。
+
+正式附件命名格式：
+
+```text
+LightNovelShelfPlus-v<version>-arm64-v8a.apk
+LightNovelShelfPlus-v<version>-x86_64.AppImage
+LightNovelShelfPlus-v<version>-x86_64.zip
+```
+
+推送 `v*` tag 也会自动运行 Release workflow 并发布版本。
+
+## 提交问题与功能建议
+
+请在[轻书架Plus Issues](https://github.com/Roroca-1/LightNovelShelf-Plus/issues)提交问题。报告界面或性能问题时，请附上平台、应用版本、复现步骤以及截图或录屏。
 
 ## 赞助本站
 
@@ -39,6 +213,8 @@ flutter run --dart-define=REFRESH_TOKEN=<refresh token>
 <img src=".github/afdian.jpeg" height="300">
 
 ## 致谢
+
+轻书架Plus 基于[轻书架官方 Flutter 客户端](https://github.com/LightNovelShelf/Flutter)继续开发，感谢上游项目及其贡献者提供完整的服务端客户端基础。
 
 基于 https://github.com/celia-sh/Novella 的 Flutter 版本重新开发得来
 
