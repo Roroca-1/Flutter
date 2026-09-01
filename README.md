@@ -41,10 +41,8 @@
 ### 外观与桌面适配
 
 - 支持自定义 Material 3 / Material You 主题色、系统动态配色和 OLED 纯黑模式。
-- Linux、Windows 使用更适合键鼠与高 DPI 显示器的宽屏布局和文字缩放。
+- Linux、Windows 使用更适合键鼠与高 DPI 显示器的宽屏布局和文字缩放。（待完善）
 - 桌面端支持键盘焦点浏览、连续选择和右键快捷操作。
-- Linux/Windows 专属键鼠代码不会在 Android 上启用。
-- 应用名称、包名、图标和仓库链接均使用“轻书架Plus”品牌。
 
 ### 缓存与性能
 
@@ -55,15 +53,7 @@
 - 自定义背景会压缩导入尺寸并复用已解码图片，降低内存、模糊和路由切换开销。
 - 设置中提供清除全部缓存、图片缓存和阅读字体缓存的入口。
 
-### 暂停启用的实验功能
 
-自定义阅读字体的导入、预览和加载源码仍保留在仓库中，但正式构建默认关闭。服务端部分章节使用随章节变化的私有 Unicode 字形映射，普通字体无法可靠还原正确字符。需要研究此功能时可自行使用：
-
-```bash
-flutter run --dart-define=ENABLE_READER_FONTS=true
-```
-
-该参数不应加入公开 Release，除非字符映射问题已经得到完整解决。
 
 ## Linux / Windows 键鼠操作
 
@@ -175,32 +165,7 @@ build\windows\x64\runner\Release\
 
 发布时必须保留该目录中的 EXE、DLL 和 `data` 文件夹，不能只复制可执行文件。
 
-## GitHub Actions 测试与发布
 
-每次推送到 `main`，`CI` workflow 会执行：
-
-- `flutter analyze`
-- `flutter test`
-- Android ARM64 debug APK
-- Linux x86_64 debug bundle
-- Windows x86_64 debug bundle
-
-手动发布正式版本：
-
-1. 打开仓库的 **Actions → Release → Run workflow**。
-2. 在 `tag` 中输入版本，例如 `v1.8.1-plus.1`。
-3. 首次验证保持 `publish=false`：构建三端 release artifacts，但不创建公开 Release。
-4. 确认成功后重新运行并选择 `publish=true`：三端全部成功后创建公开 Release。
-
-正式附件命名格式：
-
-```text
-LightNovelShelfPlus-v<version>-arm64-v8a.apk
-LightNovelShelfPlus-v<version>-x86_64.AppImage
-LightNovelShelfPlus-v<version>-x86_64.zip
-```
-
-推送 `v*` tag 也会自动运行 Release workflow 并发布版本。
 
 ## 提交问题与功能建议
 
