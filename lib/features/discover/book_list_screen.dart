@@ -204,7 +204,7 @@ class _ViewModeMenu extends StatelessWidget {
 
   static const Map<BookListViewMode, (IconData, String)> _specs =
       <BookListViewMode, (IconData, String)>{
-        BookListViewMode.grid: (Icons.grid_view_outlined, '网格'),
+        BookListViewMode.grid: (Icons.grid_view_outlined, '单本'),
         BookListViewMode.list: (Icons.view_list_outlined, '列表'),
         BookListViewMode.series: (Icons.folder_copy_outlined, '系列'),
       };
