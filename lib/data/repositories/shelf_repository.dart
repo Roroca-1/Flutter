@@ -87,8 +87,7 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
         enriched[book.id] = book;
       }
       books = <BookListItem>[
-        for (final id in bookIds)
-          if (enriched[id] case final book?) book,
+        for (final id in bookIds) ?enriched[id],
       ];
       await ref.read(bookMetadataCacheProvider).putAll(books);
     }

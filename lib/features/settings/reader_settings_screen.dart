@@ -123,6 +123,7 @@ class ReaderSettingsContent extends ConsumerWidget {
                 ),
               SettingsSliderRow(
                 title: '图片模糊',
+                description: '柔化阅读背景图片细节',
                 icon: Icons.blur_on_outlined,
                 value: settings.readerBackground.blur,
                 min: 0,
@@ -135,6 +136,7 @@ class ReaderSettingsContent extends ConsumerWidget {
               ),
               SettingsSliderRow(
                 title: '图片亮度',
+                description: '调整阅读背景图片明暗',
                 icon: Icons.brightness_medium_outlined,
                 value: settings.readerBackground.brightness,
                 min: 0.2,

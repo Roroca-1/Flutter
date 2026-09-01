@@ -808,6 +808,7 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
       :dualPageEnabled,
       :dualPageOffsetEnabled,
       :statusPillsEnabled,
+      :readerBackground,
     ) = ref.watch(
       appSettingsProvider.select(
         (settings) => (
@@ -824,6 +825,7 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
           dualPageEnabled: settings.comicReader.dualPageEnabled,
           dualPageOffsetEnabled: settings.comicReader.dualPageOffsetEnabled,
           statusPillsEnabled: settings.comicReader.statusPillsEnabled,
+          readerBackground: settings.readerBackground,
         ),
       ),
     );
@@ -863,7 +865,7 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
 
     final shell = ReaderShell(
       background: background,
-      imageBackground: settings.readerBackground,
+      imageBackground: readerBackground,
       paperTexture: backgroundMode == ReaderBackgroundMode.paper,
       loading: loading || _chapter == null,
       error: loadError,

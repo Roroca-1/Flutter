@@ -170,6 +170,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                 ),
               SettingsSliderRow(
                 title: '背景模糊',
+                description: '柔化背景图片细节',
                 icon: Icons.blur_on_outlined,
                 value: settings.appBackground.blur,
                 min: 0,
@@ -180,6 +181,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
               ),
               SettingsSliderRow(
                 title: '背景亮度',
+                description: '调整背景图片明暗',
                 icon: Icons.brightness_medium_outlined,
                 value: settings.appBackground.brightness,
                 min: 0.2,
