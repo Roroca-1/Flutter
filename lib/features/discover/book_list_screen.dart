@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/api/api_client.dart';
 import '../../data/api/models.dart';
 import '../../shared/widgets/paged_grid.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import 'catalog_providers.dart';
 import 'widgets/book_grid.dart';
 import 'widgets/novel_order_selector.dart';
@@ -59,6 +60,12 @@ class _BookListScreenState extends ConsumerState<BookListScreen> {
       onRefresh: controller.refresh,
       onLoadMore: controller.loadMore,
       onOpen: (book) => openBookDetail(context, book),
+      onSecondaryTap: (book, position) => showBookContextMenu(
+        context: context,
+        ref: ref,
+        book: book,
+        globalPosition: position,
+      ),
       emptyIcon: Icons.menu_book_outlined,
       emptyTitle: '暂无小说',
       emptyDescription: '当前排序下暂无可显示的小说。',

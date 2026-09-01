@@ -25,6 +25,7 @@ class ShelfTile extends ConsumerWidget {
     this.selectable = true,
     this.onBookContextMenu,
     this.onModifiedSelection,
+    this.onFocusChange,
   });
 
   final String editorKey;
@@ -43,6 +44,7 @@ class ShelfTile extends ConsumerWidget {
   final bool selectable;
   final void Function(BookListItem book, Offset position)? onBookContextMenu;
   final void Function(ShelfItem item, bool shift)? onModifiedSelection;
+  final ValueChanged<bool>? onFocusChange;
 
   /// 选择模式下点击是切换选中；`open` 为空表示条目已下架，只能被选中。
   void _handleTap(WidgetRef ref, VoidCallback? open) {
@@ -101,6 +103,7 @@ class ShelfTile extends ConsumerWidget {
           onSecondaryTap: onBookContextMenu == null
               ? null
               : (position) => onBookContextMenu!(resolved, position),
+          onFocusChange: onFocusChange,
         );
       }
     } else {

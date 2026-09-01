@@ -14,6 +14,7 @@ class BookListRow extends StatelessWidget {
     this.onLongPress,
     this.selected = false,
     this.onSecondaryTap,
+    this.onFocusChange,
   });
 
   final BookListItem book;
@@ -22,6 +23,7 @@ class BookListRow extends StatelessWidget {
   final VoidCallback? onLongPress;
   final bool selected;
   final ValueChanged<Offset>? onSecondaryTap;
+  final ValueChanged<bool>? onFocusChange;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +43,8 @@ class BookListRow extends StatelessWidget {
         onSecondaryTapDown: onSecondaryTap == null
             ? null
             : (details) => onSecondaryTap!(details.globalPosition),
+        onFocusChange: onFocusChange,
+        focusColor: colors.primary.withValues(alpha: 0.18),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(

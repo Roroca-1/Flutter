@@ -27,6 +27,7 @@ class BookCoverGridItem extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onSecondaryTap,
+    this.onFocusChange,
     this.selected = false,
     this.sorting = false,
     this.overlayLabel,
@@ -40,6 +41,7 @@ class BookCoverGridItem extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onSecondaryTap,
+    this.onFocusChange,
     this.selected = false,
     this.sorting = false,
     this.overlayLabel,
@@ -63,6 +65,7 @@ class BookCoverGridItem extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final ValueChanged<Offset>? onSecondaryTap;
+  final ValueChanged<bool>? onFocusChange;
   final bool selected;
   final bool sorting;
   final String? overlayLabel;
@@ -83,6 +86,8 @@ class BookCoverGridItem extends StatelessWidget {
       onSecondaryTapDown: onSecondaryTap == null
           ? null
           : (details) => onSecondaryTap!(details.globalPosition),
+      onFocusChange: onFocusChange,
+      focusColor: colors.primary.withValues(alpha: 0.18),
       borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisSize: MainAxisSize.min,

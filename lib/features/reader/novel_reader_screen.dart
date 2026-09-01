@@ -519,6 +519,13 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
       onPreviousPage: _contentController.previousPage,
       onNextPage: _contentController.nextPage,
       onToggleChrome: () => setState(() => _chromeVisible = !_chromeVisible),
+      onEscape: () {
+        if (_chromeVisible) {
+          context.pop();
+        } else {
+          setState(() => _chromeVisible = true);
+        }
+      },
       paperTexture: reader.backgroundMode == ReaderBackgroundMode.paper,
       loading: loading || current == null,
       error: loadError,

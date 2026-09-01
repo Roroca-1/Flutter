@@ -26,6 +26,7 @@ class ReaderShell extends StatelessWidget {
     this.onPreviousPage,
     this.onNextPage,
     this.onToggleChrome,
+    this.onEscape,
   });
 
   final Color background;
@@ -46,6 +47,7 @@ class ReaderShell extends StatelessWidget {
   final VoidCallback? onPreviousPage;
   final VoidCallback? onNextPage;
   final VoidCallback? onToggleChrome;
+  final VoidCallback? onEscape;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +87,7 @@ class ReaderShell extends StatelessWidget {
             const SingleActivator(LogicalKeyboardKey.space, shift: true):
                 onPreviousPage ?? () {},
             const SingleActivator(LogicalKeyboardKey.escape):
-                onToggleChrome ?? () {},
+                onEscape ?? onToggleChrome ?? () {},
           },
           child: Focus(
             autofocus: true,

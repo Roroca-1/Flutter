@@ -42,6 +42,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
   static const KanaKit _kana = KanaKit();
   static final RegExp _kanaPattern = RegExp(r'[\u3040-\u30ff]');
   String? _selectionAnchor;
+  ShelfItem? _focusedItem;
   final GlobalKey _selectionSurfaceKey = GlobalKey();
   final Map<String, GlobalKey> _itemKeys = <String, GlobalKey>{};
   List<ShelfItem> _visibleSiblings = const <ShelfItem>[];
@@ -613,8 +614,23 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             if (context.canPop()) context.pop();
             return KeyEventResult.handled;
           }
-          if (event.logicalKey == LogicalKeyboardKey.tab && snapshot != null) {
-            controller.setMode(ShelfMode.select);
+          if (event.logicalKey == LogicalKeyboardKey.space &&
+              _focusedItem != null) {
+            final item = _focusedItem!;
+            if (editor.mode == ShelfMode.select) {
+              controller.toggleSelection(item);
+            } else {
+              controller.beginSelection(item);
+            }
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.keyA &&
+              (HardwareKeyboard.instance.isControlPressed ||
+                  HardwareKeyboard.instance.isMetaPressed) &&
+              _visibleSiblings.isNotEmpty) {
+            controller.setSelection(
+              _visibleSiblings.where((item) => item.isBook),
+            );
             return KeyEventResult.handled;
           }
           return KeyEventResult.ignored;
@@ -885,6 +901,9 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                     onBookContextMenu: _showBookMenu,
                     onModifiedSelection: (item, shift) =>
                         _modifiedSelect(item, siblings, shift),
+                    onFocusChange: (focused) {
+                      if (focused) _focusedItem = item;
+                    },
                   ),
                 ),
               ),
@@ -926,6 +945,9 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                   onSecondaryTap: (position) => _showBookMenu(book, position),
                   selected: selected,
                   onLongPress: () => _editor.beginSelection(item),
+                  onFocusChange: (focused) {
+                    if (focused) _focusedItem = item;
+                  },
                   onTap: () => _state.mode == ShelfMode.select
                       ? _editor.toggleSelection(item)
                       : (HardwareKeyboard.instance.isControlPressed ||

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
 import '../../shared/widgets/paged_grid.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import 'catalog_providers.dart';
 import 'home_providers.dart';
 import 'widgets/book_grid.dart';
@@ -53,6 +54,12 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
         onRetry: controller.retry,
         onRefresh: controller.refresh,
         onOpen: (book) => openBookDetail(context, book),
+        onSecondaryTap: (book, position) => showBookContextMenu(
+          context: context,
+          ref: ref,
+          book: book,
+          globalPosition: position,
+        ),
         showRank: true,
         emptyIcon: Icons.emoji_events_outlined,
         emptyTitle: '暂无排行',

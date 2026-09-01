@@ -35,6 +35,7 @@ class PagedGrid<T> extends StatelessWidget {
     required List<BookListItem> books,
     required void Function(BookListItem book) onOpen,
     required Future<void> Function() onRefresh,
+    void Function(BookListItem book, Offset position)? onSecondaryTap,
     Widget? header,
     bool loading = false,
     bool loadingMore = false,
@@ -68,6 +69,9 @@ class PagedGrid<T> extends StatelessWidget {
       rank: showRank ? index + 1 : null,
       coverHeight: coverHeight,
       onTap: () => onOpen(book),
+      onSecondaryTap: onSecondaryTap == null
+          ? null
+          : (position) => onSecondaryTap(book, position),
     ),
   );
 

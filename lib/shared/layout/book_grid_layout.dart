@@ -47,7 +47,8 @@ class BookGridLayout {
   /// 封面区高度（不含标题区），也是向图床请求尺寸档的依据。
   double get coverHeight => tileWidth / coverAspectRatio;
 
-  double get tileHeight => coverHeight + titleBoxHeight;
+  // 额外空间吸收桌面端字体缩放、像素取整以及 InkWell 焦点描边。
+  double get tileHeight => coverHeight + titleBoxHeight + 16;
 
   /// 骨架屏单块高度：封面 + 7 间距 + 两条 13 高的文本占位 + 4 间距。
   double get skeletonTileHeight => coverHeight + 7 + 13 + 4 + 13;
@@ -72,7 +73,7 @@ class BookGridLayout {
         crossAxisCount: columns,
         crossAxisSpacing: BookGridLayout.columnGap,
         mainAxisSpacing: mainAxisSpacing ?? BookGridLayout.rowGap,
-        childAspectRatio: childAspectRatio,
+        mainAxisExtent: tileHeight,
       );
 
   /// 骨架网格：骨架卡片比真实卡片矮，用 `skeletonTileHeight`。

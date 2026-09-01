@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/api/api_client.dart';
 import '../../shared/widgets/paged_grid.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import 'catalog_providers.dart';
 import 'widgets/book_grid.dart';
 
@@ -55,6 +56,12 @@ class _ComicListScreenState extends ConsumerState<ComicListScreen> {
         onRefresh: controller.refresh,
         onLoadMore: controller.loadMore,
         onOpen: (book) => openBookDetail(context, book),
+        onSecondaryTap: (book, position) => showBookContextMenu(
+          context: context,
+          ref: ref,
+          book: book,
+          globalPosition: position,
+        ),
         emptyIcon: Icons.image_not_supported_outlined,
         emptyTitle: '暂无漫画',
         emptyDescription: '当前排序下暂无可显示的漫画。',
