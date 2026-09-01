@@ -2,10 +2,6 @@
 
 轻书架官方 Flutter 客户端的功能拓展版本。目前面向 Android平台进行测试，其他平台需要自行编译测试。
 
-目前已知 macOS 平台，没有签名的应用无法访问钥匙串，会导致登陆信息写入失败
-
-- Dart 包名：`lightnovel`
-- 应用标识：`app.lightnovel.shelf`
 
 ## 开发
 
@@ -18,23 +14,6 @@ flutter run -d <device>
 
 ```bash
 flutter run --dart-define=REFRESH_TOKEN=<refresh token>
-```
-
-## iOS
-
-部署目标 iOS 15.0。首次准备：
-
-```bash
-brew install cocoapods
-xcodebuild -downloadPlatform iOS   # 模拟器运行时
-flutter run -d <udid>
-```
-
-## 检查
-
-```bash
-flutter analyze
-flutter test
 ```
 
 ## 赞助本站
