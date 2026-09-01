@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/api/models.dart';
+import '../../data/providers.dart';
+import '../../data/settings/app_settings.dart';
 import '../../shared/layout/book_grid_layout.dart';
 import '../../shared/paging/identity_child_delegate.dart';
 import '../../shared/paging/scroll_prefetch.dart';
 import '../../shared/widgets/book_cover_grid_item.dart';
 import '../../shared/widgets/book_grid_slivers.dart';
+import '../../shared/widgets/book_list_row.dart';
 import '../../shared/widgets/state_views.dart';
 import 'history_providers.dart';
 
@@ -138,23 +141,38 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final placeholders = tab.loadingMore
         ? layout.loadMorePlaceholderCount(tab.items.length)
         : 0;
+    final listMode = ref.read(appSettingsProvider).historyDisplayMode ==
+        BookDisplayMode.list;
     return <Widget>[
-      SliverPadding(
-        padding: _gridPadding,
-        sliver: SliverGrid(
-          gridDelegate: layout.tileGridDelegate(),
-          delegate: IdentityChildDelegate<BookListItem>(
-            items: tab.items,
-            revision: (layout.coverHeight,),
-            itemBuilder: (_, book, _) => BookCoverGridItem.fromBook(
-              book,
-              coverHeight: layout.coverHeight,
-              onTap: () => _openBook(book),
+      if (listMode)
+        SliverPadding(
+          padding: _gridPadding,
+          sliver: SliverList.separated(
+            itemCount: tab.items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            itemBuilder: (_, index) {
+              final book = tab.items[index];
+              return BookListRow(book: book, onTap: () => _openBook(book));
+            },
+          ),
+        )
+      else
+        SliverPadding(
+          padding: _gridPadding,
+          sliver: SliverGrid(
+            gridDelegate: layout.tileGridDelegate(),
+            delegate: IdentityChildDelegate<BookListItem>(
+              items: tab.items,
+              revision: (layout.coverHeight,),
+              itemBuilder: (_, book, _) => BookCoverGridItem.fromBook(
+                book,
+                coverHeight: layout.coverHeight,
+                onTap: () => _openBook(book),
+              ),
             ),
           ),
         ),
-      ),
-      if (placeholders > 0)
+      if (!listMode && placeholders > 0)
         bookGridSkeletonSliver(
           layout: layout,
           count: placeholders,
@@ -186,6 +204,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayMode = ref.watch(
+      appSettingsProvider.select((settings) => settings.historyDisplayMode),
+    );
     final async = ref.watch(historyProvider);
     final data = async.value;
     final media = MediaQuery.sizeOf(context);
@@ -199,6 +220,26 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       appBar: AppBar(
         title: const Text('阅读历史'),
         actions: <Widget>[
+          IconButton(
+            tooltip: displayMode == BookDisplayMode.grid
+                ? '切换到列表视图'
+                : '切换到网格视图',
+            onPressed: () => ref
+                .read(settingsControllerProvider)
+                .update(
+                  (settings) => settings.copyWith(
+                    historyDisplayMode:
+                        settings.historyDisplayMode == BookDisplayMode.grid
+                        ? BookDisplayMode.list
+                        : BookDisplayMode.grid,
+                  ),
+                ),
+            icon: Icon(
+              displayMode == BookDisplayMode.grid
+                  ? Icons.view_list_outlined
+                  : Icons.grid_view_outlined,
+            ),
+          ),
           if (hasHistory)
             IconButton(
               tooltip: '清空阅读历史',

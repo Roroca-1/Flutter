@@ -22,6 +22,15 @@ const List<String> _readerBackgroundPresets = <String>[
   '#000000',
 ];
 
+const List<String> _readerTextPresets = <String>[
+  '#000000',
+  '#2B2B2B',
+  '#5A4632',
+  '#E8E8E8',
+  '#FFFFFF',
+  '#F2E8D5',
+];
+
 /// 阅读设置页；正文与阅读器内的设置面板共用 [ReaderSettingsContent]。
 class ReaderSettingsScreen extends StatelessWidget {
   const ReaderSettingsScreen({super.key, required this.type});
@@ -109,6 +118,39 @@ class ReaderSettingsContent extends ConsumerWidget {
                     : null,
                 trailing: _ColorSwatch(
                   color: parseSeedColor(reader.backgroundColorValue),
+                ),
+              ),
+              SettingsToggleRow(
+                title: '自定义文字颜色',
+                description: '关闭时根据背景自动选择易读颜色',
+                icon: Icons.format_color_text_outlined,
+                value: reader.customTextColorEnabled,
+                onChanged: (value) => updateReader(
+                  (reader) =>
+                      reader.copyWith(customTextColorEnabled: value),
+                ),
+              ),
+              SettingsRow(
+                title: '文字颜色',
+                description: reader.textColorValue,
+                icon: Icons.palette_outlined,
+                enabled: reader.customTextColorEnabled,
+                onTap: reader.customTextColorEnabled
+                    ? () async {
+                        final picked = await showColorPickerSheet(
+                          context,
+                          initial: reader.textColorValue,
+                          title: '文字颜色',
+                          presets: _readerTextPresets,
+                        );
+                        if (picked == null) return;
+                        updateReader(
+                          (reader) => reader.copyWith(textColorValue: picked),
+                        );
+                      }
+                    : null,
+                trailing: _ColorSwatch(
+                  color: parseSeedColor(reader.textColorValue),
                 ),
               ),
               if (customBackground)

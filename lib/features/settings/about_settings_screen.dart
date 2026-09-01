@@ -8,7 +8,8 @@ import '../../shared/widgets/settings_rows.dart';
 const String officialWebsiteUrl = 'https://www.lightnovel.app';
 const String officialGroupUrl = 'https://t.me/+J5xdTWVGOJMyOWRl';
 const String sponsorUrl = 'https://www.ifdian.net/a/wuyu8512';
-const String githubUrl = 'https://github.com/LightNovelShelf/Flutter';
+const String githubUrl =
+    'https://github.com/Roroca-1/LightNovelShelf-Plus';
 
 class AboutSettingsScreen extends StatefulWidget {
   const AboutSettingsScreen({super.key});
@@ -86,7 +87,7 @@ class _AboutSettingsScreenState extends State<AboutSettingsScreen> {
             ),
             SettingsNavigationRow(
               title: 'GitHub',
-              description: 'github.com/LightNovelShelf/Flutter',
+              description: 'github.com/Roroca-1/LightNovelShelf-Plus',
               icon: Icons.code,
               onTap: () => _openExternalUrl(githubUrl),
             ),

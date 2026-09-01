@@ -29,6 +29,17 @@ enum ComicPagedDirection { ltr, rtl }
 
 enum CleanChapterTitleScope { continueReading, readerTitle }
 
+enum BookDisplayMode { grid, list }
+
+enum ShelfSortSetting {
+  manual,
+  titleAscending,
+  titleDescending,
+  updatedNewest,
+  updatedOldest,
+  addedNewest,
+}
+
 T _enumFromName<T extends Enum>(List<T> values, Object? raw, T fallback) {
   if (raw is! String) return fallback;
   for (final value in values) {
@@ -69,6 +80,8 @@ class ReaderPreferences {
   const ReaderPreferences({
     this.backgroundMode = ReaderBackgroundMode.auto,
     this.backgroundColorValue = '#F7F1E3',
+    this.customTextColorEnabled = false,
+    this.textColorValue = '#2B2B2B',
     this.dualPageEnabled = false,
     this.dualPageOffsetEnabled = false,
     this.immersiveEnabled = false,
@@ -81,6 +94,8 @@ class ReaderPreferences {
 
   final ReaderBackgroundMode backgroundMode;
   final String backgroundColorValue;
+  final bool customTextColorEnabled;
+  final String textColorValue;
   final bool dualPageEnabled;
   final bool dualPageOffsetEnabled;
   final bool immersiveEnabled;
@@ -93,6 +108,8 @@ class ReaderPreferences {
   ReaderPreferences copyWith({
     ReaderBackgroundMode? backgroundMode,
     String? backgroundColorValue,
+    bool? customTextColorEnabled,
+    String? textColorValue,
     bool? dualPageEnabled,
     bool? dualPageOffsetEnabled,
     bool? immersiveEnabled,
@@ -104,6 +121,9 @@ class ReaderPreferences {
   }) => ReaderPreferences(
     backgroundMode: backgroundMode ?? this.backgroundMode,
     backgroundColorValue: backgroundColorValue ?? this.backgroundColorValue,
+    customTextColorEnabled:
+        customTextColorEnabled ?? this.customTextColorEnabled,
+    textColorValue: textColorValue ?? this.textColorValue,
     dualPageEnabled: dualPageEnabled ?? this.dualPageEnabled,
     dualPageOffsetEnabled: dualPageOffsetEnabled ?? this.dualPageOffsetEnabled,
     immersiveEnabled: immersiveEnabled ?? this.immersiveEnabled,
@@ -122,6 +142,7 @@ class ReaderPreferences {
         ? raw
         : const <String, dynamic>{};
     final color = values['backgroundColorValue'];
+    final textColor = values['textColorValue'];
     return ReaderPreferences(
       backgroundMode: _enumFromName(
         ReaderBackgroundMode.values,
@@ -131,6 +152,14 @@ class ReaderPreferences {
       backgroundColorValue: color is String && _hexPattern.hasMatch(color)
           ? color.toUpperCase()
           : '#F7F1E3',
+      customTextColorEnabled: _bool(
+        values['customTextColorEnabled'],
+        false,
+      ),
+      textColorValue:
+          textColor is String && _hexPattern.hasMatch(textColor)
+          ? textColor.toUpperCase()
+          : '#2B2B2B',
       dualPageEnabled: _bool(values['dualPageEnabled'], false),
       dualPageOffsetEnabled: _bool(values['dualPageOffsetEnabled'], false),
       immersiveEnabled: _bool(values['immersiveEnabled'], false),
@@ -157,6 +186,8 @@ class ReaderPreferences {
   Map<String, Object?> encode() => <String, Object?>{
     'backgroundMode': backgroundMode.name,
     'backgroundColorValue': backgroundColorValue,
+    'customTextColorEnabled': customTextColorEnabled,
+    'textColorValue': textColorValue,
     'dualPageEnabled': dualPageEnabled,
     'dualPageOffsetEnabled': dualPageOffsetEnabled,
     'immersiveEnabled': immersiveEnabled,
@@ -172,6 +203,8 @@ class ReaderPreferences {
       other is ReaderPreferences &&
       other.backgroundMode == backgroundMode &&
       other.backgroundColorValue == backgroundColorValue &&
+      other.customTextColorEnabled == customTextColorEnabled &&
+      other.textColorValue == textColorValue &&
       other.dualPageEnabled == dualPageEnabled &&
       other.dualPageOffsetEnabled == dualPageOffsetEnabled &&
       other.immersiveEnabled == immersiveEnabled &&
@@ -185,6 +218,8 @@ class ReaderPreferences {
   int get hashCode => Object.hash(
     backgroundMode,
     backgroundColorValue,
+    customTextColorEnabled,
+    textColorValue,
     dualPageEnabled,
     dualPageOffsetEnabled,
     immersiveEnabled,
@@ -228,6 +263,10 @@ class AppSettings {
 
     this.seedColorValue = '#B71C1C',
     this.seriesSearchMode = SeriesSearchMode.system,
+    this.shelfDisplayMode = BookDisplayMode.grid,
+    this.shelfSeriesView = false,
+    this.shelfSort = ShelfSortSetting.manual,
+    this.historyDisplayMode = BookDisplayMode.grid,
     this.theme = ThemeSetting.system,
     this.useSystemColor = true,
     this.convertType = ConvertType.none,
@@ -259,6 +298,10 @@ class AppSettings {
 
   final String seedColorValue;
   final SeriesSearchMode seriesSearchMode;
+  final BookDisplayMode shelfDisplayMode;
+  final bool shelfSeriesView;
+  final ShelfSortSetting shelfSort;
+  final BookDisplayMode historyDisplayMode;
   final ThemeSetting theme;
   final bool useSystemColor;
   final ConvertType convertType;
@@ -290,6 +333,10 @@ class AppSettings {
 
     String? seedColorValue,
     SeriesSearchMode? seriesSearchMode,
+    BookDisplayMode? shelfDisplayMode,
+    bool? shelfSeriesView,
+    ShelfSortSetting? shelfSort,
+    BookDisplayMode? historyDisplayMode,
     ThemeSetting? theme,
     bool? useSystemColor,
     ConvertType? convertType,
@@ -323,6 +370,10 @@ class AppSettings {
 
     seedColorValue: seedColorValue ?? this.seedColorValue,
     seriesSearchMode: seriesSearchMode ?? this.seriesSearchMode,
+    shelfDisplayMode: shelfDisplayMode ?? this.shelfDisplayMode,
+    shelfSeriesView: shelfSeriesView ?? this.shelfSeriesView,
+    shelfSort: shelfSort ?? this.shelfSort,
+    historyDisplayMode: historyDisplayMode ?? this.historyDisplayMode,
     theme: theme ?? this.theme,
     useSystemColor: useSystemColor ?? this.useSystemColor,
     convertType: convertType ?? this.convertType,
@@ -386,6 +437,22 @@ class AppSettings {
         raw['seriesSearchMode'],
         SeriesSearchMode.system,
       ),
+      shelfDisplayMode: _enumFromName(
+        BookDisplayMode.values,
+        raw['shelfDisplayMode'],
+        BookDisplayMode.grid,
+      ),
+      shelfSeriesView: _bool(raw['shelfSeriesView'], false),
+      shelfSort: _enumFromName(
+        ShelfSortSetting.values,
+        raw['shelfSort'],
+        ShelfSortSetting.manual,
+      ),
+      historyDisplayMode: _enumFromName(
+        BookDisplayMode.values,
+        raw['historyDisplayMode'],
+        BookDisplayMode.grid,
+      ),
       theme: _enumFromName(
         ThemeSetting.values,
         raw['theme'],
@@ -429,6 +496,10 @@ class AppSettings {
 
     'seedColorValue': seedColorValue,
     'seriesSearchMode': seriesSearchMode.name,
+    'shelfDisplayMode': shelfDisplayMode.name,
+    'shelfSeriesView': shelfSeriesView,
+    'shelfSort': shelfSort.name,
+    'historyDisplayMode': historyDisplayMode.name,
     'theme': theme.name,
     'useSystemColor': useSystemColor,
     'convertType': convertType.name,
@@ -461,6 +532,10 @@ class AppSettings {
       other.readerSidePadding == readerSidePadding &&
       other.seedColorValue == seedColorValue &&
       other.seriesSearchMode == seriesSearchMode &&
+      other.shelfDisplayMode == shelfDisplayMode &&
+      other.shelfSeriesView == shelfSeriesView &&
+      other.shelfSort == shelfSort &&
+      other.historyDisplayMode == historyDisplayMode &&
       other.theme == theme &&
       other.useSystemColor == useSystemColor &&
       other.convertType == convertType &&
@@ -493,6 +568,10 @@ class AppSettings {
 
     seedColorValue,
     seriesSearchMode,
+    shelfDisplayMode,
+    shelfSeriesView,
+    shelfSort,
+    historyDisplayMode,
     theme,
     useSystemColor,
     convertType,

@@ -55,6 +55,13 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build linux --debug
+      - name: Package Linux test build
+        run: tar -C build/linux/x64/debug/bundle -czf lightnovelshelf-plus-linux-x64-debug.tar.gz .
+      - uses: actions/upload-artifact@v5
+        with:
+          name: lightnovelshelf-plus-linux-x64-debug
+          path: lightnovelshelf-plus-linux-x64-debug.tar.gz
+          retention-days: 7
 
   windows:
     runs-on: windows-latest
@@ -68,3 +75,14 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build windows --debug
+      - name: Package Windows test build
+        shell: pwsh
+        run: >
+          Compress-Archive
+          -Path 'build/windows/x64/runner/Debug/*'
+          -DestinationPath 'lightnovelshelf-plus-windows-x64-debug.zip'
+      - uses: actions/upload-artifact@v5
+        with:
+          name: lightnovelshelf-plus-windows-x64-debug
+          path: lightnovelshelf-plus-windows-x64-debug.zip
+          retention-days: 7
