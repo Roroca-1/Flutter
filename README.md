@@ -1,6 +1,6 @@
 # 轻书架
 
-轻书架官方 Flutter 客户端的功能拓展版本。目前面向 Android平台进行测试，其他平台需要自行编译测试。
+轻书架官方 Flutter 客户端的功能拓展版本。目前面向 Android, Windows, Linux平台进行测试，iOS和macOS平台需要自行编译测试。
 
 
 ## 功能
