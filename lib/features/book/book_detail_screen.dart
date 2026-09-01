@@ -140,6 +140,8 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
   Widget _body(BuildContext context, BookDetailBundle bundle) {
     final detail = bundle.detail;
     final colors = Theme.of(context).colorScheme;
+    final hasAppBackground =
+        ref.read(appSettingsProvider).appBackground.path?.isNotEmpty == true;
     final position = ReadPositionCache.merge(widget.id, detail.readPosition);
     final currentIndex = position == null
         ? -1
@@ -152,7 +154,9 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
         SliverAppBar(
           pinned: true,
           expandedHeight: bookHeroHeight,
-          backgroundColor: colors.surface,
+          backgroundColor: hasAppBackground
+              ? Colors.transparent
+              : colors.surface,
           surfaceTintColor: Colors.transparent,
           actions: <Widget>[
             IconButton(
@@ -210,10 +214,8 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
           flexibleSpace: FlexibleSpaceBar(
             background: BookHero(
               detail: detail,
-              showCoverBackdrop:
-                  ref.read(appSettingsProvider).appBackground.path?.isNotEmpty != true,
-              showOpaqueSurface:
-                  ref.read(appSettingsProvider).appBackground.path?.isNotEmpty != true,
+              showCoverBackdrop: !hasAppBackground,
+              showOpaqueSurface: !hasAppBackground,
               onTitleTap: bundle.isComic ? null : () => _openSeries(bundle),
             ),
             collapseMode: CollapseMode.parallax,

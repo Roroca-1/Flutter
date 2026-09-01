@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 
 import '../data/repositories/profile_repository.dart';
+import '../core/platform/desktop_platform.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.shell});
@@ -14,6 +16,12 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
+  void _switchBranch(int delta) {
+    final count = 5;
+    final next = (widget.shell.currentIndex + delta + count) % count;
+    widget.shell.goBranch(next);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +63,21 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CallbackShortcuts(
+      bindings: isDesktopPlatform
+          ? <ShortcutActivator, VoidCallback>{
+              const SingleActivator(LogicalKeyboardKey.tab, control: true):
+                  () => _switchBranch(1),
+              const SingleActivator(
+                LogicalKeyboardKey.tab,
+                control: true,
+                shift: true,
+              ): () => _switchBranch(-1),
+            }
+          : const <ShortcutActivator, VoidCallback>{},
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
       // 两侧各自成层：NavigationBar 的 500ms 指示器动画不再连带重栅格整页内容。
       body: RepaintBoundary(child: widget.shell),
       bottomNavigationBar: RepaintBoundary(
@@ -92,6 +114,8 @@ class _HomeShellState extends State<HomeShell> {
               label: '搜索',
             ),
           ],
+        ),
+      ),
         ),
       ),
     );

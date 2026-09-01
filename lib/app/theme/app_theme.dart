@@ -235,24 +235,24 @@ ThemeData _buildAppTheme({
       backgroundColor: scheme.inverseSurface,
       contentTextStyle: TextStyle(color: scheme.onInverseSurface),
     ),
-    // Transparent pages share the persistent application background. Animated
-    // route composition would briefly show both pages and looks like a flash or
-    // overlap, while also adding a full-screen GPU pass.
+    // Transparent pages share the persistent application background. Use a
+    // two-phase fade so outgoing and incoming page contents are never painted
+    // together over that background.
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
-        TargetPlatform.android: _InstantPageTransitionsBuilder(),
-        TargetPlatform.iOS: _InstantPageTransitionsBuilder(),
-        TargetPlatform.linux: _InstantPageTransitionsBuilder(),
-        TargetPlatform.macOS: _InstantPageTransitionsBuilder(),
-        TargetPlatform.windows: _InstantPageTransitionsBuilder(),
-        TargetPlatform.fuchsia: _InstantPageTransitionsBuilder(),
+        TargetPlatform.android: _BackgroundSafePageTransitionsBuilder(),
+        TargetPlatform.iOS: _BackgroundSafePageTransitionsBuilder(),
+        TargetPlatform.linux: _BackgroundSafePageTransitionsBuilder(),
+        TargetPlatform.macOS: _BackgroundSafePageTransitionsBuilder(),
+        TargetPlatform.windows: _BackgroundSafePageTransitionsBuilder(),
+        TargetPlatform.fuchsia: _BackgroundSafePageTransitionsBuilder(),
       },
     ),
   );
 }
 
-class _InstantPageTransitionsBuilder extends PageTransitionsBuilder {
-  const _InstantPageTransitionsBuilder();
+class _BackgroundSafePageTransitionsBuilder extends PageTransitionsBuilder {
+  const _BackgroundSafePageTransitionsBuilder();
 
   @override
   Widget buildTransitions<T>(
@@ -261,5 +261,26 @@ class _InstantPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) => child;
+  ) {
+    final incoming = CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0.5, 1, curve: Curves.easeOut),
+      reverseCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+    );
+    final outgoing = ReverseAnimation(
+      CurvedAnimation(
+        parent: secondaryAnimation,
+        curve: const Interval(0, 0.5, curve: Curves.easeIn),
+        reverseCurve: const Interval(0, 0.5, curve: Curves.easeOut),
+      ),
+    );
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[incoming, outgoing]),
+      child: child,
+      builder: (_, child) => Opacity(
+        opacity: (incoming.value * outgoing.value).clamp(0.0, 1.0).toDouble(),
+        child: child,
+      ),
+    );
+  }
 }
