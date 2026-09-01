@@ -142,7 +142,7 @@ jobs:
           Description: 轻书架Plus desktop client
           EOF
           dpkg-deb --root-owner-group --build debian \
-            "dist/LightNovelShelfPlus-${RELEASE_TAG}-amd64.deb"
+            "dist/LightNovelShelfPlus-${RELEASE_TAG}-x86_64.deb"
 
           cp -a package-root arch-package
           installed_size="$(du -sk package-root | cut -f1)"
