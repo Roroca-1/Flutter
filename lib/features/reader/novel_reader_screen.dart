@@ -521,6 +521,7 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
 
     final shell = ReaderShell(
       background: background,
+      imageBackground: settings.readerBackground,
       paperTexture: reader.backgroundMode == ReaderBackgroundMode.paper,
       loading: loading || current == null,
       error: loadError,

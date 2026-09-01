@@ -17,7 +17,7 @@ val hasReleaseSigning =
     ).all { !it.isNullOrBlank() }
 
 android {
-    namespace = "app.lightnovel.shelf"
+    namespace = "app.lightnovel.shelf.plus"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.lightnovel.shelf"
+        applicationId = "app.lightnovel.shelf.plus"
         // flutter_secure_storage 的 EncryptedSharedPreferences 需要 API 23。
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion

@@ -57,10 +57,41 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
         .where((item) => item.isBook)
         .map((item) => item.bookId!)
         .toList();
-    final books = await ref.read(bookMetadataCacheProvider).resolve(
+    var books = await ref.read(bookMetadataCacheProvider).resolve(
       bookIds,
       _api.getBooksByIdsBatched,
     );
+    final missingAuthors = books
+        .where(
+          (book) =>
+              book.type == BookType.novel &&
+              (book.authorName == null || book.authorName!.trim().isEmpty),
+        )
+        .toList();
+    if (missingAuthors.isNotEmpty) {
+      final details = await Future.wait(
+        missingAuthors.map((book) async {
+          try {
+            final detail = await _api.getBookInfo(book.id);
+            final author = detail.authorName ?? detail.classification.author;
+            return author == null || author.trim().isEmpty
+                ? book
+                : book.copyWith(authorName: author.trim());
+          } catch (_) {
+            return book;
+          }
+        }),
+      );
+      final enriched = <int, BookListItem>{for (final book in books) book.id: book};
+      for (final book in details) {
+        enriched[book.id] = book;
+      }
+      books = <BookListItem>[
+        for (final id in bookIds)
+          if (enriched[id] case final book?) book,
+      ];
+      await ref.read(bookMetadataCacheProvider).putAll(books);
+    }
     final availableIds = books.map((book) => book.id).toSet();
     return ShelfSnapshot(
       items: sortShelfItems(booksOnly.where((item) => availableIds.contains(item.bookId)).toList()),

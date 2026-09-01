@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/platform/app_system_ui.dart';
+import '../../../data/settings/app_settings.dart';
+import '../../../shared/widgets/background_image_layer.dart';
 import '../../../shared/widgets/state_views.dart';
 import 'reader_paper_texture.dart';
 
@@ -13,6 +15,7 @@ class ReaderShell extends StatelessWidget {
   const ReaderShell({
     super.key,
     required this.background,
+    this.imageBackground,
     this.paperTexture = false,
     this.loading = false,
     this.error,
@@ -23,6 +26,7 @@ class ReaderShell extends StatelessWidget {
   });
 
   final Color background;
+  final BackgroundImagePreferences? imageBackground;
 
   /// 纸质背景的纸纹，铺在正文之下。
   final bool paperTexture;
@@ -59,9 +63,18 @@ class ReaderShell extends StatelessWidget {
         ThemeData.estimateBrightnessForColor(background),
       ),
       child: Scaffold(
-        backgroundColor: background,
+        backgroundColor: Colors.transparent,
         body: Stack(
           children: <Widget>[
+            Positioned.fill(child: ColoredBox(color: background)),
+            if (imageBackground?.path?.isNotEmpty == true)
+              Positioned.fill(
+                child: BackgroundImageLayer(
+                  path: imageBackground!.path,
+                  blur: imageBackground!.blur,
+                  brightness: imageBackground!.brightness,
+                ),
+              ),
             // 纸纹层常在：Stack 的孩子没有 key，少一层会让正文层错位重建，
             // 阅读器的 State 连同分页结果一起丢。
             Positioned.fill(

@@ -71,6 +71,20 @@ class BookListItem {
   final int? interiorLevel;
   final BookCategory? category;
 
+  BookListItem copyWith({String? authorName}) => BookListItem(
+    id: id,
+    type: type,
+    title: title,
+    seriesTitle: seriesTitle,
+    coverUrl: coverUrl,
+    coverPlaceholder: coverPlaceholder,
+    authorName: authorName ?? this.authorName,
+    lastUpdatedAt: lastUpdatedAt,
+    level: level,
+    interiorLevel: interiorLevel,
+    category: category,
+  );
+
   static BookListItem decode(Object? value) {
     final book = asRecord(value, '书籍列表项');
     final cover = decodeCover(book['Cover']);

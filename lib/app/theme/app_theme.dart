@@ -54,27 +54,36 @@ class AppPalette {
     required this.useSystemColor,
     required this.seedColorValue,
     required this.oledBlack,
+    required this.hasBackgroundImage,
   });
 
   static AppPalette of(AppSettings settings) => AppPalette(
     useSystemColor: settings.useSystemColor,
     seedColorValue: settings.seedColorValue,
     oledBlack: settings.oledBlack,
+    hasBackgroundImage: settings.appBackground.path?.isNotEmpty == true,
   );
 
   final bool useSystemColor;
   final String seedColorValue;
   final bool oledBlack;
+  final bool hasBackgroundImage;
 
   @override
   bool operator ==(Object other) =>
       other is AppPalette &&
       other.useSystemColor == useSystemColor &&
       other.seedColorValue == seedColorValue &&
-      other.oledBlack == oledBlack;
+      other.oledBlack == oledBlack &&
+      other.hasBackgroundImage == hasBackgroundImage;
 
   @override
-  int get hashCode => Object.hash(useSystemColor, seedColorValue, oledBlack);
+  int get hashCode => Object.hash(
+    useSystemColor,
+    seedColorValue,
+    oledBlack,
+    hasBackgroundImage,
+  );
 }
 
 /// 把 `DynamicColorBuilder` 的取色结果往下传。阅读页要单独构建一套亮/暗主题，
@@ -163,21 +172,31 @@ ThemeData _buildAppTheme({
   final base = ThemeData(
     colorScheme: scheme,
     useMaterial3: true,
-    scaffoldBackgroundColor: isOledDark
+    scaffoldBackgroundColor: palette.hasBackgroundImage
+        ? Colors.transparent
+        : isOledDark
         ? OledPalette.background
         : scheme.surface,
   );
 
   return base.copyWith(
     appBarTheme: AppBarTheme(
-      backgroundColor: isOledDark ? OledPalette.background : scheme.surface,
+      backgroundColor: palette.hasBackgroundImage
+          ? scheme.surface.withValues(alpha: 0.88)
+          : isOledDark
+          ? OledPalette.background
+          : scheme.surface,
       foregroundColor: scheme.onSurface,
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: isOledDark ? 0 : 3,
       centerTitle: false,
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: isOledDark ? OledPalette.background : scheme.surface,
+      backgroundColor: palette.hasBackgroundImage
+          ? scheme.surface.withValues(alpha: 0.9)
+          : isOledDark
+          ? OledPalette.background
+          : scheme.surface,
       surfaceTintColor: Colors.transparent,
       indicatorColor: scheme.secondaryContainer,
       elevation: 3,
@@ -188,7 +207,9 @@ ThemeData _buildAppTheme({
       thickness: 1,
     ),
     cardTheme: CardThemeData(
-      color: scheme.surfaceContainer,
+      color: palette.hasBackgroundImage
+          ? scheme.surfaceContainer.withValues(alpha: 0.9)
+          : scheme.surfaceContainer,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,

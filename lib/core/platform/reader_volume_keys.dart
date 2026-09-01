@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 const OptionalMethodChannel _readerVolumeKeyChannel = OptionalMethodChannel(
-  'app.lightnovel.shelf/reader_volume_keys',
+  'app.lightnovel.shelf.plus/reader_volume_keys',
 );
 
 /// 挂在根 `Navigator` 上，让阅读器知道自己被弹层或新页面盖住了。

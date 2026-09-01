@@ -104,7 +104,7 @@ class AppRuntime {
 
 /// HTTP 头只允许 ASCII，固定用英文标识加版本号。
 Future<String> _backendUserAgent() async {
-  const String name = 'LightNovelShelf';
+  const String name = 'LightNovelShelf-Plus';
   try {
     final info = await PackageInfo.fromPlatform();
     return info.version.isEmpty ? name : '$name/${info.version}';

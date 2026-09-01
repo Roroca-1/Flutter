@@ -13,13 +13,13 @@ typedef _DecodeNative = Int32 Function(
 );
 
 @Native<_FinalSizeNative>(
-  assetId: 'package:lightnovel/features/reader/woff2.dart',
+  assetId: 'package:lightnovel_shelf_plus/features/reader/woff2.dart',
   symbol: 'ln_woff2_final_size',
 )
 external int _finalSize(Pointer<Uint8> input, int inputLength);
 
 @Native<_DecodeNative>(
-  assetId: 'package:lightnovel/features/reader/woff2.dart',
+  assetId: 'package:lightnovel_shelf_plus/features/reader/woff2.dart',
   symbol: 'ln_woff2_decode',
 )
 external int _decode(

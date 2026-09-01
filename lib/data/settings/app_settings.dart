@@ -42,6 +42,62 @@ enum ShelfSortSetting {
 
 enum ReaderFontSetting { system, serif, sansSerif, monospace, custom }
 
+@immutable
+class BackgroundImagePreferences {
+  const BackgroundImagePreferences({
+    this.path,
+    this.blur = 0,
+    this.brightness = 0.75,
+    this.extractMaterialColor = false,
+  });
+
+  final String? path;
+  final double blur;
+  final double brightness;
+  final bool extractMaterialColor;
+
+  BackgroundImagePreferences copyWith({
+    String? path,
+    double? blur,
+    double? brightness,
+    bool? extractMaterialColor,
+    bool clearPath = false,
+  }) => BackgroundImagePreferences(
+    path: clearPath ? null : (path ?? this.path),
+    blur: blur ?? this.blur,
+    brightness: brightness ?? this.brightness,
+    extractMaterialColor: extractMaterialColor ?? this.extractMaterialColor,
+  );
+
+  static BackgroundImagePreferences decode(Object? raw) {
+    final value = raw is Map<String, dynamic> ? raw : const <String, dynamic>{};
+    return BackgroundImagePreferences(
+      path: value['path'] as String?,
+      blur: _clampDouble(value['blur'], 0, 30, 0),
+      brightness: _clampDouble(value['brightness'], 0.2, 1.2, 0.75),
+      extractMaterialColor: _bool(value['extractMaterialColor'], false),
+    );
+  }
+
+  Map<String, Object?> encode() => <String, Object?>{
+    'path': path,
+    'blur': blur,
+    'brightness': brightness,
+    'extractMaterialColor': extractMaterialColor,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is BackgroundImagePreferences &&
+      other.path == path &&
+      other.blur == blur &&
+      other.brightness == brightness &&
+      other.extractMaterialColor == extractMaterialColor;
+
+  @override
+  int get hashCode => Object.hash(path, blur, brightness, extractMaterialColor);
+}
+
 T _enumFromName<T extends Enum>(List<T> values, Object? raw, T fallback) {
   if (raw is! String) return fallback;
   for (final value in values) {
@@ -276,6 +332,9 @@ class AppSettings {
     this.useSystemColor = true,
     this.convertType = ConvertType.none,
     this.autoCheckUpdate = true,
+    this.appBackground = const BackgroundImagePreferences(),
+    this.readerBackground = const BackgroundImagePreferences(brightness: 1),
+    this.syncBackgroundImages = false,
   });
 
   final bool bookDetailCacheEnabled;
@@ -314,6 +373,9 @@ class AppSettings {
   final bool useSystemColor;
   final ConvertType convertType;
   final bool autoCheckUpdate;
+  final BackgroundImagePreferences appBackground;
+  final BackgroundImagePreferences readerBackground;
+  final bool syncBackgroundImages;
 
   AppSettings copyWith({
     bool? bookDetailCacheEnabled,
@@ -352,6 +414,9 @@ class AppSettings {
     bool? useSystemColor,
     ConvertType? convertType,
     bool? autoCheckUpdate,
+    BackgroundImagePreferences? appBackground,
+    BackgroundImagePreferences? readerBackground,
+    bool? syncBackgroundImages,
   }) => AppSettings(
     bookDetailCacheEnabled:
         bookDetailCacheEnabled ?? this.bookDetailCacheEnabled,
@@ -392,6 +457,9 @@ class AppSettings {
     useSystemColor: useSystemColor ?? this.useSystemColor,
     convertType: convertType ?? this.convertType,
     autoCheckUpdate: autoCheckUpdate ?? this.autoCheckUpdate,
+    appBackground: appBackground ?? this.appBackground,
+    readerBackground: readerBackground ?? this.readerBackground,
+    syncBackgroundImages: syncBackgroundImages ?? this.syncBackgroundImages,
   );
 
   static final RegExp _hexPattern = RegExp(r'^#[0-9A-Fa-f]{6}$');
@@ -486,6 +554,9 @@ class AppSettings {
         ConvertType.none,
       ),
       autoCheckUpdate: _bool(raw['autoCheckUpdate'], true),
+      appBackground: BackgroundImagePreferences.decode(raw['appBackground']),
+      readerBackground: BackgroundImagePreferences.decode(raw['readerBackground']),
+      syncBackgroundImages: _bool(raw['syncBackgroundImages'], false),
     );
   }
 
@@ -528,6 +599,9 @@ class AppSettings {
     'useSystemColor': useSystemColor,
     'convertType': convertType.name,
     'autoCheckUpdate': autoCheckUpdate,
+    'appBackground': appBackground.encode(),
+    'readerBackground': readerBackground.encode(),
+    'syncBackgroundImages': syncBackgroundImages,
   };
 
   @override
@@ -566,7 +640,10 @@ class AppSettings {
       other.theme == theme &&
       other.useSystemColor == useSystemColor &&
       other.convertType == convertType &&
-      other.autoCheckUpdate == autoCheckUpdate;
+      other.autoCheckUpdate == autoCheckUpdate &&
+      other.appBackground == appBackground &&
+      other.readerBackground == readerBackground &&
+      other.syncBackgroundImages == syncBackgroundImages;
 
   @override
   int get hashCode => Object.hashAll(<Object?>[
@@ -606,6 +683,9 @@ class AppSettings {
     useSystemColor,
     convertType,
     autoCheckUpdate,
+    appBackground,
+    readerBackground,
+    syncBackgroundImages,
   ]);
 }
 

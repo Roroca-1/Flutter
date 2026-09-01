@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"/>
     <application
-        android:label="轻书架"
+        android:label="轻书架Plus"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

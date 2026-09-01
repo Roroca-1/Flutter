@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "app.lightnovel" "\0"
-            VALUE "FileDescription", "LightNovelShelf" "\0"
+            VALUE "FileDescription", "轻书架Plus" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "LightNovelShelf" "\0"
+            VALUE "InternalName", "LightNovelShelfPlus" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 app.lightnovel. All rights reserved." "\0"
-            VALUE "OriginalFilename", "lightnovel_shelf.exe" "\0"
-            VALUE "ProductName", "LightNovelShelf" "\0"
+            VALUE "OriginalFilename", "lightnovel_shelf_plus.exe" "\0"
+            VALUE "ProductName", "轻书架Plus" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

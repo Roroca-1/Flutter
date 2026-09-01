@@ -86,6 +86,10 @@ class ReaderContentStyle {
     required Map<String, String> attributes,
   }) {
     final styles = <String, String>{};
+    final family = fontFamily;
+    if (family != null && family.isNotEmpty) {
+      styles['font-family'] = "'$family'";
+    }
     switch (tag) {
       case 'p':
         styles['margin'] = '0';

@@ -1,4 +1,4 @@
-package app.lightnovel.shelf
+package app.lightnovel.shelf.plus
 
 import android.os.Bundle
 
@@ -12,10 +12,23 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
+        preferHighestRefreshRate()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun preferHighestRefreshRate() {
+        val current = windowManager.defaultDisplay.mode
+        val best = windowManager.defaultDisplay.supportedModes
+            .filter { it.physicalWidth == current.physicalWidth && it.physicalHeight == current.physicalHeight }
+            .maxByOrNull { it.refreshRate }
+            ?: return
+        window.attributes = window.attributes.apply {
+            preferredDisplayModeId = best.modeId
+        }
     }
 
     private companion object {
-        const val READER_VOLUME_KEY_CHANNEL = "app.lightnovel.shelf/reader_volume_keys"
+        const val READER_VOLUME_KEY_CHANNEL = "app.lightnovel.shelf.plus/reader_volume_keys"
     }
 
     private var readerVolumeKeyChannel: MethodChannel? = null

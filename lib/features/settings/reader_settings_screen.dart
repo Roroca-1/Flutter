@@ -8,6 +8,7 @@ import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
 import '../../data/api/models/book.dart';
 import '../../data/repositories/user_font_repository.dart';
+import '../../data/repositories/background_image_repository.dart';
 import '../../shared/widgets/color_picker_sheet.dart';
 import '../../shared/widgets/settings_rows.dart';
 import '../../shared/widgets/app_dialogs.dart';
@@ -53,6 +54,8 @@ class ReaderSettingsScreen extends StatelessWidget {
 class ReaderSettingsContent extends ConsumerWidget {
   const ReaderSettingsContent({super.key, required this.type});
 
+  static const _backgrounds = BackgroundImageRepository();
+
   final BookType type;
 
   @override
@@ -76,6 +79,16 @@ class ReaderSettingsContent extends ConsumerWidget {
       );
     }
 
+    void updateImageBackground(
+      BackgroundImagePreferences Function(BackgroundImagePreferences) update,
+    ) => controller.update((current) {
+      final next = update(current.readerBackground);
+      return current.copyWith(
+        readerBackground: next,
+        appBackground: current.syncBackgroundImages ? next : null,
+      );
+    });
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       child: Column(
@@ -84,6 +97,54 @@ class ReaderSettingsContent extends ConsumerWidget {
           SettingsSection(
             title: '背景',
             children: <Widget>[
+              SettingsRow(
+                title: settings.readerBackground.path == null
+                    ? '选择阅读背景图片'
+                    : '更换阅读背景图片',
+                description: settings.syncBackgroundImages
+                    ? '当前与应用背景同步'
+                    : '仅用于小说与漫画阅读区域',
+                icon: Icons.add_photo_alternate_outlined,
+                onTap: () async {
+                  final imported = await _backgrounds.pickAndImport('reader');
+                  if (imported == null) return;
+                  updateImageBackground(
+                    (current) => current.copyWith(path: imported.path),
+                  );
+                },
+              ),
+              if (settings.readerBackground.path != null)
+                SettingsRow(
+                  title: '移除阅读背景图片',
+                  icon: Icons.delete_outline,
+                  onTap: () => updateImageBackground(
+                    (current) => current.copyWith(clearPath: true),
+                  ),
+                ),
+              SettingsSliderRow(
+                title: '图片模糊',
+                icon: Icons.blur_on_outlined,
+                value: settings.readerBackground.blur,
+                min: 0,
+                max: 30,
+                divisions: 30,
+                format: (value) => value == 0 ? '关闭' : value.round().toString(),
+                onChanged: (value) => updateImageBackground(
+                  (current) => current.copyWith(blur: value),
+                ),
+              ),
+              SettingsSliderRow(
+                title: '图片亮度',
+                icon: Icons.brightness_medium_outlined,
+                value: settings.readerBackground.brightness,
+                min: 0.2,
+                max: 1.2,
+                divisions: 20,
+                format: (value) => '${(value * 100).round()}%',
+                onChanged: (value) => updateImageBackground(
+                  (current) => current.copyWith(brightness: value),
+                ),
+              ),
               SettingsPickerRow<ReaderBackgroundMode>(
                 title: '阅读背景',
                 description: '阅读器的底色与正文颜色',

@@ -59,6 +59,14 @@ class BookMetadataCache {
     }),
   );
 
+  Future<void> putAll(Iterable<BookListItem> books) async {
+    final cached = await _read();
+    for (final book in books) {
+      cached[book.id] = book;
+    }
+    await _write(cached);
+  }
+
   Future<void> clear() => _store.delete(bookMetadataCacheKey);
 
   Future<List<BookListItem>?> readList(String name, Duration maxAge) async {

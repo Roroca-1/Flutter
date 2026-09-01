@@ -863,6 +863,7 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
 
     final shell = ReaderShell(
       background: background,
+      imageBackground: settings.readerBackground,
       paperTexture: backgroundMode == ReaderBackgroundMode.paper,
       loading: loading || _chapter == null,
       error: loadError,

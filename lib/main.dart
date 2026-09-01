@@ -16,6 +16,7 @@ import 'data/providers.dart';
 import 'data/retry_policy.dart';
 import 'data/session/auth_controller.dart';
 import 'data/settings/app_settings.dart';
+import 'shared/widgets/background_image_layer.dart';
 
 /// 开发期通过 `--dart-define=REFRESH_TOKEN=...` 注入的刷新令牌，用于跳过手动登录。
 const String _injectedRefreshToken = String.fromEnvironment('REFRESH_TOKEN');
@@ -59,6 +60,9 @@ class LightNovelShelfApp extends ConsumerWidget {
     final language = ref.watch(
       appSettingsProvider.select((settings) => settings.language),
     );
+    final appBackground = ref.watch(
+      appSettingsProvider.select((settings) => settings.appBackground),
+    );
     final router = ref.watch(routerProvider);
     // 亮暗由 `themeMode` 决定，两套主题都要构建。
 
@@ -68,13 +72,24 @@ class LightNovelShelfApp extends ConsumerWidget {
           light: lightDynamic,
           dark: darkDynamic,
           child: MaterialApp.router(
-            title: '轻书架',
+            title: '轻书架Plus',
             debugShowCheckedModeBanner: false,
             builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
               value: AppSystemUi.defaultOverlayStyle(
                 Theme.of(context).brightness,
               ),
-              child: child ?? const SizedBox.shrink(),
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  ColoredBox(color: Theme.of(context).colorScheme.surface),
+                  BackgroundImageLayer(
+                    path: appBackground.path,
+                    blur: appBackground.blur,
+                    brightness: appBackground.brightness,
+                  ),
+                  child ?? const SizedBox.shrink(),
+                ],
+              ),
             ),
             routerConfig: router,
             theme: buildAppThemeFor(

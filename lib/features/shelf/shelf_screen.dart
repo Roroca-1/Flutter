@@ -10,6 +10,7 @@ import '../../data/repositories/shelf_draft.dart';
 import '../../data/repositories/shelf_repository.dart';
 import '../../data/repositories/local_comic_shelf_repository.dart';
 import '../../data/settings/app_settings.dart';
+import '../../data/session/auth_controller.dart';
 import '../../shared/layout/book_grid_layout.dart';
 import '../../shared/paging/identity_child_delegate.dart';
 import '../../shared/widgets/app_dialogs.dart';
@@ -312,6 +313,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         builder: (_) => ShelfSeriesBooksScreen(
           seriesName: name,
           books: books,
+          initialDisplayMode: _displayMode,
           onOpen: (pageContext, book) {
             Navigator.of(pageContext).pop();
             _openBook(book);
@@ -411,7 +413,11 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         ),
       ),
     );
-    final authenticated = ref.watch(authSnapshotProvider).isAuthenticated;
+    final auth = ref.watch(authSnapshotProvider);
+    final authenticated = auth.isAuthenticated ||
+        (ref.read(appRuntimeProvider).hasStoredSession &&
+            (auth.status == AuthenticationStatus.unknown ||
+                auth.status == AuthenticationStatus.refreshing));
     final async = ref.watch(shelfProvider);
     final editor = ref.watch(shelfEditorProvider(_editorKey));
     final snapshot = async.value;

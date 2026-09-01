@@ -1,5 +1,5 @@
-name: lightnovel
-description: 轻书架官方 Flutter 客户端。
+name: lightnovel_shelf_plus
+description: 轻书架Plus 多平台客户端。
 publish_to: 'none'
 version: 1.8.1+14
 

@@ -15,7 +15,7 @@ typedef _DecodeNative = ffi.Int32 Function(
   ffi.Size,
 );
 @ffi.Native<_DecodeNative>(
-  assetId: 'package:lightnovel/shared/widgets/blurhash_image.dart',
+  assetId: 'package:lightnovel_shelf_plus/shared/widgets/blurhash_image.dart',
   symbol: 'ln_blurhash_decode',
 )
 external int _decode(
