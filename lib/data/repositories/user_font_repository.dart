@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' show loadFontFromList;
 
 import 'package:crypto/crypto.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ImportedReaderFont {
