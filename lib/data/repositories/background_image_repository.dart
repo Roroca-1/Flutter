@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/theme/app_theme.dart';
@@ -25,14 +26,22 @@ class BackgroundImageRepository {
   }
 
   Future<ImportedBackgroundImage?> pickAndImport(String slot) async {
-    final picked = await openFile(
-      acceptedTypeGroups: const <XTypeGroup>[
-        XTypeGroup(
-          label: '图片',
-          extensions: <String>['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
-        ),
-      ],
-    );
+    final XFile? picked;
+    if (Platform.isAndroid) {
+      picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        requestFullMetadata: false,
+      );
+    } else {
+      picked = await openFile(
+        acceptedTypeGroups: const <XTypeGroup>[
+          XTypeGroup(
+            label: '图片',
+            extensions: <String>['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
+          ),
+        ],
+      );
+    }
     if (picked == null) return null;
     final bytes = await picked.readAsBytes();
     if (bytes.isEmpty) throw const FormatException('图片文件为空。');

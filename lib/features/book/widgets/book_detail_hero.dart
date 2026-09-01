@@ -22,10 +22,12 @@ class BookHero extends StatelessWidget {
     required this.detail,
     this.onTitleTap,
     this.showCoverBackdrop = true,
+    this.showOpaqueSurface = true,
   });
 
   final BookDetail detail;
   final bool showCoverBackdrop;
+  final bool showOpaqueSurface;
 
   /// 点标题打开系列列表，为空时标题为普通文本。
   final VoidCallback? onTitleTap;
@@ -77,7 +79,9 @@ class BookHero extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        ColoredBox(color: colors.surface),
+        ColoredBox(
+          color: showOpaqueSurface ? colors.surface : Colors.transparent,
+        ),
         if (showCoverBackdrop && detail.coverUrl.isNotEmpty)
           ImageFiltered(
             imageFilter: ui.ImageFilter.blur(sigmaX: 28, sigmaY: 28),
@@ -97,9 +101,11 @@ class BookHero extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: <Color>[
-                colors.surface.withValues(alpha: 0.1),
-                colors.surface.withValues(alpha: 0.55),
-                colors.surface,
+                colors.surface.withValues(alpha: showOpaqueSurface ? 0.1 : 0),
+                colors.surface.withValues(
+                  alpha: showOpaqueSurface ? 0.55 : 0.18,
+                ),
+                colors.surface.withValues(alpha: showOpaqueSurface ? 1 : 0.35),
               ],
               stops: const <double>[0, 0.55, 1],
             ),

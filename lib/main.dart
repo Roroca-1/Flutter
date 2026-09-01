@@ -12,6 +12,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app/router.dart';
 import 'app/theme/app_theme.dart';
 import 'core/platform/app_system_ui.dart';
+import 'core/platform/desktop_platform.dart';
 import 'data/app_runtime.dart';
 import 'data/providers.dart';
 import 'data/retry_policy.dart';
@@ -90,17 +91,20 @@ class LightNovelShelfApp extends ConsumerWidget {
                   ),
                   if (child != null)
                     CallbackShortcuts(
-                      bindings: <ShortcutActivator, VoidCallback>{
-                        const SingleActivator(LogicalKeyboardKey.escape): () {
-                          rootNavigatorKey.currentState?.maybePop();
-                        },
-                      },
+                      bindings: isDesktopPlatform
+                          ? <ShortcutActivator, VoidCallback>{
+                              const SingleActivator(
+                                LogicalKeyboardKey.escape,
+                              ): () {
+                                rootNavigatorKey.currentState?.maybePop();
+                              },
+                            }
+                          : const <ShortcutActivator, VoidCallback>{},
                       child: Focus(
                         autofocus: true,
                         child: switch (defaultTargetPlatform) {
                           TargetPlatform.linux ||
-                          TargetPlatform.windows ||
-                          TargetPlatform.macOS =>
+                          TargetPlatform.windows =>
                             MediaQuery.withClampedTextScaling(
                               minScaleFactor: 1.08,
                               maxScaleFactor: 1.6,

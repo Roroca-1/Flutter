@@ -6,13 +6,15 @@ import '../../data/api/api_client.dart';
 import '../../data/api/models.dart';
 import '../../shared/widgets/paged_grid.dart';
 import '../../shared/widgets/book_context_menu.dart';
+import '../../shared/widgets/book_list_row.dart';
+import '../../shared/widgets/state_views.dart';
 import 'catalog_providers.dart';
 import 'widgets/book_grid.dart';
 import 'widgets/novel_order_selector.dart';
 import 'widgets/novel_series_tile.dart';
 
 /// 全部小说的展示方式：平铺或按系列分组。
-enum BookListViewMode { flat, series }
+enum BookListViewMode { grid, list, series }
 
 /// 全部小说：展示方式与排序切换，无限滚动。
 class BookListScreen extends ConsumerStatefulWidget {
@@ -24,7 +26,7 @@ class BookListScreen extends ConsumerStatefulWidget {
 
 class _BookListScreenState extends ConsumerState<BookListScreen> {
   BookListOrder _order = BookListOrder.latest;
-  BookListViewMode _mode = BookListViewMode.flat;
+  BookListViewMode _mode = BookListViewMode.grid;
 
   void _openSeries(NovelSeriesListItem series) {
     // 系列名可能带 `/`，走查询参数而不是路径段。
@@ -47,6 +49,85 @@ class _BookListScreenState extends ConsumerState<BookListScreen> {
   Widget _flatBody() {
     final state = ref.watch(bookCatalogProvider(_order));
     final controller = ref.read(bookCatalogProvider(_order).notifier);
+    if (_mode == BookListViewMode.list) {
+      return RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.metrics.extentAfter < 600 &&
+                state.hasMore &&
+                !state.loading &&
+                !state.loadingMore &&
+                state.loadMoreError == null) {
+              controller.loadMore();
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                sliver: SliverToBoxAdapter(child: _header()),
+              ),
+              if (state.items.isEmpty && state.loading)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (state.items.isEmpty && state.error != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: ErrorStateView(
+                    message: state.error!,
+                    onRetry: controller.retry,
+                  ),
+                )
+              else if (state.items.isEmpty)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: EmptyStateView(
+                    icon: Icons.menu_book_outlined,
+                    title: '暂无小说',
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  sliver: SliverList.separated(
+                    itemCount: state.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final book = state.items[index];
+                      return BookListRow(
+                        book: book,
+                        onTap: () => openBookDetail(context, book),
+                        onSecondaryTap: (position) => showBookContextMenu(
+                          context: context,
+                          ref: ref,
+                          book: book,
+                          globalPosition: position,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              if (state.items.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 64,
+                    child: ListFooterStatus(
+                      loading: state.loadingMore,
+                      hasMore: state.hasMore,
+                      error: state.loadMoreError,
+                      onRetry: controller.loadMore,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
     return PagedGrid.books(
       header: _header(),
       books: state.items,
@@ -110,7 +191,7 @@ class _BookListScreenState extends ConsumerState<BookListScreen> {
         const SizedBox(width: 4),
       ],
     ),
-    body: _mode == BookListViewMode.flat ? _flatBody() : _seriesBody(),
+    body: _mode == BookListViewMode.series ? _seriesBody() : _flatBody(),
   );
 }
 
@@ -123,7 +204,8 @@ class _ViewModeMenu extends StatelessWidget {
 
   static const Map<BookListViewMode, (IconData, String)> _specs =
       <BookListViewMode, (IconData, String)>{
-        BookListViewMode.flat: (Icons.grid_view_outlined, '单本'),
+        BookListViewMode.grid: (Icons.grid_view_outlined, '网格'),
+        BookListViewMode.list: (Icons.view_list_outlined, '列表'),
         BookListViewMode.series: (Icons.folder_copy_outlined, '系列'),
       };
 

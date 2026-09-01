@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/api/models.dart';
+import '../../core/platform/desktop_platform.dart';
 import '../format.dart';
 import 'book_image.dart';
 
@@ -40,10 +41,10 @@ class BookListRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        onSecondaryTapDown: onSecondaryTap == null
+        onSecondaryTapDown: !isDesktopPlatform || onSecondaryTap == null
             ? null
             : (details) => onSecondaryTap!(details.globalPosition),
-        onFocusChange: onFocusChange,
+        onFocusChange: isDesktopPlatform ? onFocusChange : null,
         focusColor: colors.primary.withValues(alpha: 0.18),
         child: Padding(
           padding: const EdgeInsets.all(10),

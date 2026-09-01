@@ -212,6 +212,8 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
               detail: detail,
               showCoverBackdrop:
                   ref.read(appSettingsProvider).appBackground.path?.isNotEmpty != true,
+              showOpaqueSurface:
+                  ref.read(appSettingsProvider).appBackground.path?.isNotEmpty != true,
               onTitleTap: bundle.isComic ? null : () => _openSeries(bundle),
             ),
             collapseMode: CollapseMode.parallax,

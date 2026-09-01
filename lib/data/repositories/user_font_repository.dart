@@ -69,16 +69,19 @@ class UserFontRepository {
   String? selectedFamily(AppSettings settings) => switch (settings.readerFont) {
     ReaderFontSetting.system => null,
     ReaderFontSetting.serif => switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'serif',
       TargetPlatform.windows => 'SimSun',
       TargetPlatform.macOS || TargetPlatform.iOS => 'Songti SC',
       _ => 'Noto Serif CJK SC',
     },
     ReaderFontSetting.sansSerif => switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'sans-serif',
       TargetPlatform.windows => 'Microsoft YaHei',
       TargetPlatform.macOS || TargetPlatform.iOS => 'PingFang SC',
       _ => 'Noto Sans CJK SC',
     },
     ReaderFontSetting.monospace => switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'monospace',
       TargetPlatform.windows => 'Microsoft YaHei UI',
       _ => 'Noto Sans Mono CJK SC',
     },

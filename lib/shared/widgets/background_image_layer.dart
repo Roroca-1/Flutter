@@ -32,7 +32,10 @@ class BackgroundImageLayer extends StatelessWidget {
         File(value),
         fit: BoxFit.cover,
         gaplessPlayback: true,
-        filterQuality: FilterQuality.medium,
+        // 模糊背景不需要按屏幕分辨率解码；小纹理放大后再做低半径模糊，
+        // 能显著减少 GPU 离屏采样和图片内存。
+        cacheWidth: blur > 0 ? 384 : null,
+        filterQuality: blur > 0 ? FilterQuality.low : FilterQuality.medium,
       ),
     );
     return RepaintBoundary(
@@ -40,7 +43,10 @@ class BackgroundImageLayer extends StatelessWidget {
         child: blur <= 0
             ? image
             : ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                imageFilter: ImageFilter.blur(
+                  sigmaX: blur.clamp(0.0, 5.0),
+                  sigmaY: blur.clamp(0.0, 5.0),
+                ),
                 child: Transform.scale(scale: 1.08, child: image),
               ),
       ),

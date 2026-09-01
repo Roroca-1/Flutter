@@ -7,6 +7,7 @@ import 'package:kana_kit/kana_kit.dart';
 import 'package:pinyin/pinyin.dart';
 
 import '../../data/api/models.dart';
+import '../../core/platform/desktop_platform.dart';
 import '../../data/api/requests.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/shelf_draft.dart';
@@ -473,8 +474,10 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
 
   void _openShelfSeries(String name, List<BookListItem> books) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ShelfSeriesBooksScreen(
+      PageRouteBuilder<void>(
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (_, _, _) => ShelfSeriesBooksScreen(
           seriesName: name,
           books: books,
           initialDisplayMode: _displayMode,
@@ -605,6 +608,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
       child: Focus(
         autofocus: true,
         onKeyEvent: (_, event) {
+          if (!isDesktopPlatform) return KeyEventResult.ignored;
           if (event is! KeyDownEvent) return KeyEventResult.ignored;
           if (event.logicalKey == LogicalKeyboardKey.escape) {
             if (editor.mode == ShelfMode.select) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/platform/app_system_ui.dart';
+import '../../../core/platform/desktop_platform.dart';
 import '../../../data/settings/app_settings.dart';
 import '../../../shared/widgets/background_image_layer.dart';
 import '../../../shared/widgets/state_views.dart';
@@ -73,7 +74,8 @@ class ReaderShell extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: CallbackShortcuts(
-          bindings: <ShortcutActivator, VoidCallback>{
+          bindings: isDesktopPlatform
+              ? <ShortcutActivator, VoidCallback>{
             const SingleActivator(LogicalKeyboardKey.arrowLeft):
                 onPreviousPage ?? () {},
             const SingleActivator(LogicalKeyboardKey.pageUp):
@@ -88,7 +90,8 @@ class ReaderShell extends StatelessWidget {
                 onPreviousPage ?? () {},
             const SingleActivator(LogicalKeyboardKey.escape):
                 onEscape ?? onToggleChrome ?? () {},
-          },
+                }
+              : const <ShortcutActivator, VoidCallback>{},
           child: Focus(
             autofocus: true,
             child: Stack(

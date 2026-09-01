@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/api/models.dart';
+import '../../core/platform/desktop_platform.dart';
 import '../book_badges.dart';
 import '../layout/book_grid_layout.dart';
 import 'book_image.dart';
@@ -83,10 +84,10 @@ class BookCoverGridItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
-      onSecondaryTapDown: onSecondaryTap == null
+      onSecondaryTapDown: !isDesktopPlatform || onSecondaryTap == null
           ? null
           : (details) => onSecondaryTap!(details.globalPosition),
-      onFocusChange: onFocusChange,
+      onFocusChange: isDesktopPlatform ? onFocusChange : null,
       focusColor: colors.primary.withValues(alpha: 0.18),
       borderRadius: BorderRadius.circular(12),
       child: Column(
