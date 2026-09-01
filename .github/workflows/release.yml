@@ -77,7 +77,7 @@ jobs:
         run: >
           sudo apt-get update && sudo apt-get install -y
           clang cmake ninja-build pkg-config libgtk-3-dev
-          liblzma-dev libsecret-1-dev libfuse2 wget imagemagick
+          liblzma-dev libsecret-1-dev libfuse2 wget imagemagick zstd
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.0
@@ -112,6 +112,56 @@ jobs:
           generated="$(find . -maxdepth 1 -type f -name '*.AppImage' ! -name 'linuxdeploy-*' -print -quit)"
           test -n "$generated"
           mv "$generated" "dist/LightNovelShelfPlus-${RELEASE_TAG}-x86_64.AppImage"
+      - name: Package Debian and Arch Linux installers
+        run: |
+          version="${RELEASE_TAG#v}"
+          arch_version="${version//-/_}"
+          bundle="build/linux/x64/release/bundle"
+
+          install -Dm755 "$bundle/lightnovel_shelf_plus" \
+            package-root/opt/lightnovel-shelf-plus/lightnovel_shelf_plus
+          cp -a "$bundle/lib" "$bundle/data" package-root/opt/lightnovel-shelf-plus/
+          install -Dm644 AppDir/usr/share/applications/lightnovel-shelf-plus.desktop \
+            package-root/usr/share/applications/lightnovel-shelf-plus.desktop
+          install -Dm644 AppDir/usr/share/icons/hicolor/256x256/apps/lightnovel-shelf-plus.png \
+            package-root/usr/share/icons/hicolor/256x256/apps/lightnovel-shelf-plus.png
+          install -d package-root/usr/bin
+          ln -s /opt/lightnovel-shelf-plus/lightnovel_shelf_plus \
+            package-root/usr/bin/lightnovel-shelf-plus
+
+          mkdir -p debian/DEBIAN
+          cp -a package-root/. debian/
+          cat > debian/DEBIAN/control <<EOF
+          Package: lightnovel-shelf-plus
+          Version: ${version}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: LightNovelShelf Plus <81666000+Roroca-1@users.noreply.github.com>
+          Depends: libgtk-3-0, libsecret-1-0, liblzma5
+          Description: 轻书架Plus desktop client
+          EOF
+          dpkg-deb --root-owner-group --build debian \
+            "dist/LightNovelShelfPlus-${RELEASE_TAG}-amd64.deb"
+
+          cp -a package-root arch-package
+          installed_size="$(du -sk package-root | cut -f1)"
+          cat > arch-package/.PKGINFO <<EOF
+          pkgname = lightnovel-shelf-plus
+          pkgbase = lightnovel-shelf-plus
+          pkgver = ${arch_version}-1
+          pkgdesc = 轻书架Plus desktop client
+          url = https://github.com/Roroca-1/LightNovelShelf-Plus
+          builddate = $(date +%s)
+          packager = LightNovelShelf Plus GitHub Actions
+          size = $((installed_size * 1024))
+          arch = x86_64
+          depend = gtk3
+          depend = libsecret
+          depend = xz
+          EOF
+          tar --zstd -cf "dist/LightNovelShelfPlus-${RELEASE_TAG}-x86_64.pkg.tar.zst" \
+            -C arch-package .
       - uses: actions/upload-artifact@v5
         with:
           name: release-${{ env.RELEASE_TAG }}-linux
@@ -130,13 +180,19 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build windows --release
-      - name: Package Windows bundle
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Build Windows installer
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Compress-Archive `
-            -Path 'build/windows/x64/runner/Release/*' `
-            -DestinationPath "dist/LightNovelShelfPlus-$env:RELEASE_TAG-x86_64.zip"
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=$version" `
+            "/DReleaseTag=$env:RELEASE_TAG" `
+            "windows\installer.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v5
         with:
           name: release-${{ env.RELEASE_TAG }}-windows
