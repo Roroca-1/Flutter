@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'api/api_client.dart';
 import 'app_runtime.dart';
 import 'repositories/reader_font_repository.dart';
+import 'repositories/book_metadata_cache.dart';
 import 'session/auth_controller.dart';
 import 'settings/app_settings.dart';
 
@@ -37,3 +38,6 @@ final Provider<AuthenticationSnapshot> authSnapshotProvider =
 
 final Provider<ReaderFontRepository> readerFontRepositoryProvider =
     Provider<ReaderFontRepository>((ref) => const ReaderFontRepository());
+
+final Provider<BookMetadataCache> bookMetadataCacheProvider =
+    Provider<BookMetadataCache>((ref) => BookMetadataCache(ref.watch(appRuntimeProvider).keyValueStore));

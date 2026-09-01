@@ -11,6 +11,7 @@ import '../../data/api/api_client.dart';
 import '../../data/api/models/book.dart';
 import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
+import '../../data/repositories/user_font_repository.dart';
 import '../../shared/format.dart';
 import '../../shared/widgets/html/reader_content_style.dart';
 import 'reader_chapter_prerenderer.dart';
@@ -105,6 +106,17 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
       fonts: ref.read(readerFontRepositoryProvider),
       bookId: widget.bookId,
     );
+    final customPath = ref.read(appSettingsProvider).customReaderFontPath;
+    if (customPath != null) {
+      unawaited(() async {
+        try {
+          await UserFontRepository.instance.load(customPath);
+          if (mounted) setState(() {});
+        } catch (_) {
+          // Invalid or missing custom fonts fall back to the platform fonts.
+        }
+      }());
+    }
     unawaited(_load());
   }
 
@@ -278,15 +290,28 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
     return '章节加载失败，请稍后重试。';
   }
 
-  ReaderContentStyle _contentStyle(AppSettings settings, String? fontFamily) =>
-      ReaderContentStyle(
+  ReaderContentStyle _contentStyle(AppSettings settings, String? chapterFont) {
+    final selected = switch (settings.readerFont) {
+      ReaderFontSetting.system => null,
+      ReaderFontSetting.serif => 'serif',
+      ReaderFontSetting.sansSerif => 'sans-serif',
+      ReaderFontSetting.monospace => 'monospace',
+      ReaderFontSetting.custom => UserFontRepository.instance.loadedFamily(settings.customReaderFontPath),
+    };
+    return ReaderContentStyle(
         fontSize: settings.fontSize,
         lineHeight: settings.readerLineHeight,
         lineSpace: settings.readerLineSpace,
         firstLineIndent: settings.readerFirstLineIndent,
         justify: settings.readerJustify,
-        fontFamily: fontFamily,
+        fontFamily: chapterFont ?? selected,
+        fontFamilyFallback: <String>[
+          if (chapterFont != null && selected != null) selected,
+          'sans-serif',
+          'serif',
+        ],
       );
+  }
 
   ReaderChapterContent? _chapterContent(
     ReaderPreparedChapter? prepared,

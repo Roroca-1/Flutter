@@ -177,8 +177,6 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     if (snapshot == null) return;
     final editor = _editor;
     final draft = editor.effectiveDraft(snapshot);
-    final folders = editor.selectedFolders(draft);
-    final books = editor.selectedBooks(draft);
     final dirty = editor.isDirty(snapshot);
     final command = await ShelfManageSheet.show(
       context,
@@ -187,12 +185,6 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         ShelfManageCommand.browse,
         ShelfManageCommand.drag,
         ShelfManageCommand.select,
-        ShelfManageCommand.createFolder,
-        if (folders.length == 1 && books.isEmpty)
-          ShelfManageCommand.renameFolder,
-        if (folders.isNotEmpty && books.isEmpty)
-          ShelfManageCommand.deleteFolder,
-        if (books.isNotEmpty && folders.isEmpty) ShelfManageCommand.moveBooks,
         if (_state.selected.isNotEmpty) ShelfManageCommand.removeItems,
         if (dirty) ShelfManageCommand.save,
         if (dirty) ShelfManageCommand.discard,
@@ -291,17 +283,22 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     if (snapshot == null || selected.isEmpty) return;
     final editor = _editor;
     final draft = editor.effectiveDraft(snapshot);
-    final hasFolder = editor.selectedFolders(draft).isNotEmpty;
+    final ids = editor.selectedBooks(draft).map((item) => item.bookId!).toSet();
+    if (ids.isEmpty) return;
     final ok = await showAppConfirm(
       context: context,
       title: '移出书架',
-      message: hasFolder
-          ? '所选文件夹会被删除，其中的书籍将移回书架根目录。'
-          : '将从书架移出 ${shelfSelectionBookCount(draft, selected)} 本书，阅读记录不受影响。',
+      message: '将从书架移出 ${ids.length} 本书，阅读记录不受影响。',
       confirmLabel: '移出',
     );
     if (!ok || !mounted) return;
-    editor.removeItems(Set<String>.of(selected));
+    try {
+      final removed = await ref.read(shelfProvider.notifier).removeBooks(ids);
+      editor.setMode(ShelfMode.browse);
+      if (mounted) ScaffoldMessenger.of(context).showText('已从书架移出 $removed 本书');
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showText(describeShelfError(error, fallback: '无法移出所选书籍。'));
+    }
   }
 
   void _openFolder(String folderId) {
@@ -470,8 +467,8 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                     ),
                 icon: Icon(
                   _seriesView
-                      ? Icons.grid_view_outlined
-                      : Icons.folder_copy_outlined,
+                      ? Icons.library_books_outlined
+                      : Icons.auto_awesome_mosaic_outlined,
                 ),
               ),
             if (snapshot != null && editor.mode == ShelfMode.browse)
@@ -677,8 +674,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
           _displayMode == BookDisplayMode.list
               ? _seriesList(displayLevel, siblings)
               : _seriesGrid(displayLevel, layout, siblings)
-        else if (_displayMode == BookDisplayMode.list &&
-            editor.mode == ShelfMode.browse)
+        else if (_displayMode == BookDisplayMode.list && editor.mode != ShelfMode.drag)
           _bookList(displayLevel, siblings)
         else
           SliverPadding(
@@ -740,7 +736,15 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                   ),
                 );
               }
-              return BookListRow(book: book, onTap: () => _openBook(book));
+              final selected = _state.selected.contains(item.key);
+              return BookListRow(
+                book: book,
+                selected: selected,
+                onLongPress: () => _editor.beginSelection(item),
+                onTap: () => _state.mode == ShelfMode.select
+                    ? _editor.toggleSelection(item)
+                    : _openBook(book),
+              );
             }
             final title = item.title.trim();
             return Card(
@@ -823,7 +827,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             seriesTitle: entry,
             coverUrl: latest.coverUrl,
             coverPlaceholder: latest.coverPlaceholder,
-            authorName: null,
+            authorName: latest.authorName,
             lastUpdatedAt: latest.lastUpdatedAt,
             level: null,
             interiorLevel: null,
@@ -831,7 +835,11 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
           );
           return BookListRow(
             book: series,
-            subtitle: '${books.length} 本',
+            subtitle: [
+              if (latest.authorName?.trim().isNotEmpty == true) latest.authorName!.trim(),
+              '${books.length} 本',
+              '更新于 ${latest.lastUpdatedAt.year}-${latest.lastUpdatedAt.month.toString().padLeft(2, '0')}-${latest.lastUpdatedAt.day.toString().padLeft(2, '0')}',
+            ].join(' · '),
             onTap: () => _openShelfSeries(entry, books),
           );
         },

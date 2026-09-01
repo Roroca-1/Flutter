@@ -11,11 +11,15 @@ class BookListRow extends StatelessWidget {
     required this.book,
     required this.onTap,
     this.subtitle,
+    this.onLongPress,
+    this.selected = false,
   });
 
   final BookListItem book;
   final VoidCallback onTap;
   final String? subtitle;
+  final VoidCallback? onLongPress;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +33,7 @@ class BookListRow extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(
@@ -74,8 +79,8 @@ class BookListRow extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Icon(
-                Icons.chevron_right,
-                color: colors.onSurfaceVariant,
+                selected ? Icons.check_circle : Icons.chevron_right,
+                color: selected ? colors.primary : colors.onSurfaceVariant,
               ),
             ],
           ),

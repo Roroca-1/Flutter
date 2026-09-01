@@ -14,6 +14,7 @@ class ReaderContentStyle {
     required this.justify,
     this.lineSpace = 0,
     this.fontFamily,
+    this.fontFamilyFallback,
   });
 
   /// 正文基准字号（逻辑像素）。
@@ -33,11 +34,17 @@ class ReaderContentStyle {
 
   /// 章节混淆字体族名，null 用系统字体。
   final String? fontFamily;
+  final List<String>? fontFamilyFallback;
 
   /// 正文色不在这里：颜色只影响绘制，掺进来会让亮暗切换等于排版参数变更，整章
   /// 重建并重新分页。颜色由外层 `DefaultTextStyle` 提供。
   TextStyle get textStyle =>
-      TextStyle(fontSize: fontSize, height: lineHeight, fontFamily: fontFamily);
+      TextStyle(
+        fontSize: fontSize,
+        height: lineHeight,
+        fontFamily: fontFamily,
+        fontFamilyFallback: fontFamilyFallback,
+      );
 
   /// `<font size="1..7">` 的历史换算表，与简介渲染器共用一套倍率。
   static const List<double> _fontTagSizes = <double>[
@@ -221,7 +228,8 @@ class ReaderContentStyle {
       other.lineSpace == lineSpace &&
       other.firstLineIndent == firstLineIndent &&
       other.justify == justify &&
-      other.fontFamily == fontFamily;
+      other.fontFamily == fontFamily &&
+      listEquals(other.fontFamilyFallback, fontFamilyFallback);
 
   @override
   int get hashCode => Object.hash(
@@ -231,5 +239,6 @@ class ReaderContentStyle {
     firstLineIndent,
     justify,
     fontFamily,
+    Object.hashAll(fontFamilyFallback ?? const <String>[]),
   );
 }

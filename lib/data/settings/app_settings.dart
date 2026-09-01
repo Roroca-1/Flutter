@@ -40,6 +40,8 @@ enum ShelfSortSetting {
   addedNewest,
 }
 
+enum ReaderFontSetting { system, serif, sansSerif, monospace, custom }
+
 T _enumFromName<T extends Enum>(List<T> values, Object? raw, T fallback) {
   if (raw is! String) return fallback;
   for (final value in values) {
@@ -260,6 +262,9 @@ class AppSettings {
     this.comicPagedDirection = ComicPagedDirection.ltr,
     this.readerPrerenderAdjacent = true,
     this.readerSidePadding = 30,
+    this.readerFont = ReaderFontSetting.system,
+    this.customReaderFontPath,
+    this.customReaderFontName,
 
     this.seedColorValue = '#B71C1C',
     this.seriesSearchMode = SeriesSearchMode.system,
@@ -295,6 +300,9 @@ class AppSettings {
   final ComicPagedDirection comicPagedDirection;
   final bool readerPrerenderAdjacent;
   final double readerSidePadding;
+  final ReaderFontSetting readerFont;
+  final String? customReaderFontPath;
+  final String? customReaderFontName;
 
   final String seedColorValue;
   final SeriesSearchMode seriesSearchMode;
@@ -330,6 +338,9 @@ class AppSettings {
     ComicPagedDirection? comicPagedDirection,
     bool? readerPrerenderAdjacent,
     double? readerSidePadding,
+    ReaderFontSetting? readerFont,
+    String? customReaderFontPath,
+    String? customReaderFontName,
 
     String? seedColorValue,
     SeriesSearchMode? seriesSearchMode,
@@ -367,6 +378,9 @@ class AppSettings {
     readerPrerenderAdjacent:
         readerPrerenderAdjacent ?? this.readerPrerenderAdjacent,
     readerSidePadding: readerSidePadding ?? this.readerSidePadding,
+    readerFont: readerFont ?? this.readerFont,
+    customReaderFontPath: customReaderFontPath ?? this.customReaderFontPath,
+    customReaderFontName: customReaderFontName ?? this.customReaderFontName,
 
     seedColorValue: seedColorValue ?? this.seedColorValue,
     seriesSearchMode: seriesSearchMode ?? this.seriesSearchMode,
@@ -430,6 +444,13 @@ class AppSettings {
       ),
       readerPrerenderAdjacent: _bool(raw['readerPrerenderAdjacent'], true),
       readerSidePadding: _clampDouble(raw['readerSidePadding'], 12, 64, 30),
+      readerFont: _enumFromName(
+        ReaderFontSetting.values,
+        raw['readerFont'],
+        ReaderFontSetting.system,
+      ),
+      customReaderFontPath: raw['customReaderFontPath'] as String?,
+      customReaderFontName: raw['customReaderFontName'] as String?,
 
       seedColorValue: _hexColor(raw['seedColorValue'], '#B71C1C'),
       seriesSearchMode: _enumFromName(
@@ -493,6 +514,9 @@ class AppSettings {
     'comicPagedDirection': comicPagedDirection.name,
     'readerPrerenderAdjacent': readerPrerenderAdjacent,
     'readerSidePadding': readerSidePadding,
+    'readerFont': readerFont.name,
+    'customReaderFontPath': customReaderFontPath,
+    'customReaderFontName': customReaderFontName,
 
     'seedColorValue': seedColorValue,
     'seriesSearchMode': seriesSearchMode.name,
@@ -530,6 +554,9 @@ class AppSettings {
       other.comicPagedDirection == comicPagedDirection &&
       other.readerPrerenderAdjacent == readerPrerenderAdjacent &&
       other.readerSidePadding == readerSidePadding &&
+      other.readerFont == readerFont &&
+      other.customReaderFontPath == customReaderFontPath &&
+      other.customReaderFontName == customReaderFontName &&
       other.seedColorValue == seedColorValue &&
       other.seriesSearchMode == seriesSearchMode &&
       other.shelfDisplayMode == shelfDisplayMode &&
@@ -565,6 +592,9 @@ class AppSettings {
     comicPagedDirection,
     readerPrerenderAdjacent,
     readerSidePadding,
+    readerFont,
+    customReaderFontPath,
+    customReaderFontName,
 
     seedColorValue,
     seriesSearchMode,

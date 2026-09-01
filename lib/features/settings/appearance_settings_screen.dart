@@ -4,7 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
+import '../../app/theme/app_theme.dart';
+import '../../shared/widgets/color_picker_sheet.dart';
 import '../../shared/widgets/settings_rows.dart';
+
+const List<String> _appColorPresets = <String>[
+  '#B71C1C', '#E65100', '#F9A825', '#2E7D32',
+  '#00695C', '#1565C0', '#4527A0', '#AD1457',
+];
 
 class AppearanceSettingsScreen extends ConsumerWidget {
   const AppearanceSettingsScreen({super.key});
@@ -63,6 +70,36 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                 value: settings.coverColorExtraction,
                 onChanged: (value) => controller.update(
                   (settings) => settings.copyWith(coverColorExtraction: value),
+                ),
+              ),
+              SettingsRow(
+                title: '应用配色',
+                description: isAndroid && settings.useSystemColor
+                    ? '关闭系统配色后可自定义'
+                    : settings.seedColorValue,
+                icon: Icons.palette_outlined,
+                enabled: !isAndroid || !settings.useSystemColor,
+                onTap: isAndroid && settings.useSystemColor
+                    ? null
+                    : () async {
+                        final picked = await showColorPickerSheet(
+                          context,
+                          initial: settings.seedColorValue,
+                          title: '应用配色',
+                          presets: _appColorPresets,
+                        );
+                        if (picked == null) return;
+                        controller.update(
+                          (settings) => settings.copyWith(seedColorValue: picked),
+                        );
+                      },
+                trailing: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: parseSeedColor(settings.seedColorValue),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
               if (isAndroid) ...<Widget>[

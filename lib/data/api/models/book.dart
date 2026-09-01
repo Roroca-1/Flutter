@@ -38,6 +38,10 @@ class BookCategory {
       color: asString(record['Color']),
     );
   }
+
+  Map<String, Object?> encode() => <String, Object?>{
+    'Name': name, 'ShortName': shortName, 'Color': color,
+  };
 }
 
 class BookListItem {
@@ -85,6 +89,19 @@ class BookListItem {
       category: BookCategory.decodeNullable(book['Category']),
     );
   }
+
+  Map<String, Object?> encode() => <String, Object?>{
+    'Id': id,
+    'Type': type?.wire,
+    'Title': title,
+    'SeriesTitle': seriesTitle,
+    'Cover': coverUrl,
+    'UserName': authorName,
+    'LastUpdatedAt': lastUpdatedAt.toUtc().toIso8601String(),
+    'Level': level,
+    'InteriorLevel': interiorLevel,
+    'Category': category?.encode(),
+  };
 }
 
 class BookListPage {

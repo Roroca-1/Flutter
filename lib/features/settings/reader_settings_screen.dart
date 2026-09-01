@@ -7,6 +7,7 @@ import '../../core/platform/reader_immersive_mode.dart';
 import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
 import '../../data/api/models/book.dart';
+import '../../data/repositories/user_font_repository.dart';
 import '../../shared/widgets/color_picker_sheet.dart';
 import '../../shared/widgets/settings_rows.dart';
 
@@ -188,6 +189,47 @@ class ReaderSettingsContent extends ConsumerWidget {
             SettingsSection(
               title: '排版',
               children: <Widget>[
+                SettingsPickerRow<ReaderFontSetting>(
+                  title: '阅读字体',
+                  description: settings.readerFont == ReaderFontSetting.custom
+                      ? settings.customReaderFontName ?? '自定义字体'
+                      : '缺少字符时自动回退到系统字体',
+                  icon: Icons.font_download_outlined,
+                  value: settings.readerFont,
+                  options: const <(ReaderFontSetting, String)>[
+                    (ReaderFontSetting.system, '系统默认'),
+                    (ReaderFontSetting.serif, '衬线字体'),
+                    (ReaderFontSetting.sansSerif, '无衬线字体'),
+                    (ReaderFontSetting.monospace, '等宽字体'),
+                    (ReaderFontSetting.custom, '导入的字体'),
+                  ],
+                  onChanged: (value) {
+                    if (value == ReaderFontSetting.custom &&
+                        settings.customReaderFontPath == null) return;
+                    controller.update((settings) => settings.copyWith(readerFont: value));
+                  },
+                ),
+                SettingsRow(
+                  title: '导入字体',
+                  description: '支持 TTF、OTF、TTC、OTC、WOFF 与 WOFF2',
+                  icon: Icons.upload_file_outlined,
+                  onTap: () async {
+                    try {
+                      final imported = await UserFontRepository.instance.pickAndImport();
+                      if (imported == null) return;
+                      controller.update(
+                        (settings) => settings.copyWith(
+                          readerFont: ReaderFontSetting.custom,
+                          customReaderFontPath: imported.path,
+                          customReaderFontName: imported.name,
+                        ),
+                      );
+                      if (context.mounted) ScaffoldMessenger.of(context).showText('已导入 ${imported.name}');
+                    } catch (_) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showText('字体无法载入，将继续使用默认字体');
+                    }
+                  },
+                ),
                 SettingsSliderRow(
                   title: '字号',
                   description: '小说阅读器使用的文字大小',

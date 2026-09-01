@@ -151,7 +151,7 @@ class HistoryController extends AsyncNotifier<HistoryState> {
       math.min(start + historyPageSize, tab.ids.length),
     );
     final fetched = which == HistoryTab.novel
-        ? await _api.getBookListByIds(slice)
+        ? await ref.read(bookMetadataCacheProvider).resolve(slice, _api.getBookListByIds)
         : (await _api.getComicSeriesByIds(slice)).items
               .map((series) => series.toBookListItem())
               .toList();

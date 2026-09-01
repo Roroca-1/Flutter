@@ -38,13 +38,19 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
   }
 
   Future<ShelfSnapshot> _hydrate(List<ShelfItem> items, String? version) async {
-    final bookIds = items
+    final booksOnly = items.where((item) => item.isBook).map((item) => item.copyWith(parents: const <String>[])).toList();
+    final bookIds = booksOnly
         .where((item) => item.isBook)
         .map((item) => item.bookId!)
         .toList();
+    final books = await ref.read(bookMetadataCacheProvider).resolve(
+      bookIds,
+      _api.getBooksByIdsBatched,
+    );
+    final availableIds = books.map((book) => book.id).toSet();
     return ShelfSnapshot(
-      items: sortShelfItems(items),
-      books: await _api.getBooksByIdsBatched(bookIds),
+      items: sortShelfItems(booksOnly.where((item) => availableIds.contains(item.bookId)).toList()),
+      books: books,
       version: version,
     );
   }
@@ -70,7 +76,7 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
   Future<ShelfSnapshot> save(ShelfDraft draft) {
     final generation = ++_mutationGeneration;
     final normalized = ShelfDraft(
-      items: normalizeShelfIndexes(draft.items),
+      items: normalizeShelfIndexes(draft.items.where((item) => item.isBook).map((item) => item.copyWith(parents: const <String>[])).toList()),
       version: draft.version,
     );
     final operation = _saveQueue.then((_) async {

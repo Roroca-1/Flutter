@@ -40,7 +40,12 @@ final FutureProvider<List<BookListItem>> homeRankingProvider =
         appSettingsProvider.select((settings) => settings.homeRankType),
       );
       final settings = watchContentSettings(ref);
+      final cache = ref.read(bookMetadataCacheProvider);
+      final cacheName = 'ranking-${period.name}';
+      final cached = await cache.readList(cacheName, const Duration(minutes: 15));
+      if (cached != null) return applyContentFilter(cached, settings);
       final items = await api.getRank(rankPeriodDays[period]!);
+      await cache.writeList(cacheName, items);
       return applyContentFilter(items, settings);
     }, isAutoDispose: true);
 
@@ -48,6 +53,9 @@ final FutureProvider<List<BookListItem>> homeLatestBooksProvider =
     FutureProvider<List<BookListItem>>((ref) async {
       final api = ref.watch(apiClientProvider);
       final settings = watchContentSettings(ref);
+      final cache = ref.read(bookMetadataCacheProvider);
+      final cached = await cache.readList('latest', const Duration(minutes: 15));
+      if (cached != null) return applyContentFilter(cached, settings).take(_homePreviewCount).toList();
       final page = await api.getBookList(
         page: 1,
         size: _homeLatestFetchSize,
@@ -56,19 +64,25 @@ final FutureProvider<List<BookListItem>> homeLatestBooksProvider =
         ignoreAI: settings.ignoreAI,
       );
       final filtered = applyContentFilter(page.items, settings);
+      await cache.writeList('latest', page.items);
       return filtered.take(_homePreviewCount).toList();
     }, isAutoDispose: true);
 
 final FutureProvider<List<BookListItem>> homeComicsProvider =
     FutureProvider<List<BookListItem>>((ref) async {
       final api = ref.watch(apiClientProvider);
+      final cache = ref.read(bookMetadataCacheProvider);
+      final cached = await cache.readList('comics', const Duration(minutes: 15));
+      if (cached != null) return cached;
       final page = await api.getComicList(
         page: 1,
         order: ComicOrder.latest,
         size: _homePreviewCount,
       );
       // 后端没有漫画的分类信息，不做内容过滤。
-      return page.items.map((item) => item.toBookListItem()).toList();
+      final books = page.items.map((item) => item.toBookListItem()).toList();
+      await cache.writeList('comics', books);
+      return books;
     }, isAutoDispose: true);
 
 final FutureProvider<OnlineInfo> onlineInfoProvider =

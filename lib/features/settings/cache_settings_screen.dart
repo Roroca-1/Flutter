@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../data/providers.dart';
+import '../../data/repositories/book_metadata_cache.dart';
 import '../../shared/image_cache.dart';
 import '../../shared/widgets/app_dialogs.dart';
 import '../../shared/widgets/book_image.dart';
@@ -25,6 +26,25 @@ class CacheSettingsScreen extends ConsumerStatefulWidget {
 class _CacheSettingsScreenState extends ConsumerState<CacheSettingsScreen> {
   bool _clearingImages = false;
   bool _clearingFonts = false;
+  bool _clearingAll = false;
+
+  Future<void> _clearAllCache() async {
+    if (_clearingAll) return;
+    _clearingAll = true;
+    try {
+      BookImage.clearRevealCache();
+      PaintingBinding.instance.imageCache..clear()..clearLiveImages();
+      await appImageCacheManager.emptyCache();
+      await ref.read(bookMetadataCacheProvider).clear();
+      await ref.read(bookMetadataCacheProvider).clearHome();
+      await _removeReaderFontCache();
+      if (mounted) await showAppAlert(context: context, title: '缓存已清除', message: '图片、书架、阅读历史、首页内容和章节字体缓存已清除。');
+    } catch (_) {
+      if (mounted) await showAppAlert(context: context, title: '无法清除缓存', message: '部分缓存无法删除，请重试。');
+    } finally {
+      _clearingAll = false;
+    }
+  }
 
   Future<void> _clearImageCache() async {
     if (_clearingImages) return;
@@ -135,6 +155,12 @@ class _CacheSettingsScreenState extends ConsumerState<CacheSettingsScreen> {
                   (settings) =>
                       settings.copyWith(fontCacheLimit: value.round()),
                 ),
+              ),
+              SettingsRow(
+                title: '清除全部缓存',
+                description: '清除图片、书籍列表、首页内容和章节字体缓存',
+                icon: Icons.cleaning_services_outlined,
+                onTap: _clearAllCache,
               ),
               SettingsRow(
                 title: '清除图片缓存',
