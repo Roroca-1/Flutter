@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lightnovel_shelf_plus/core/platform/reader_volume_keys.dart';
 
 const MethodChannel _channel = MethodChannel(
-  'app.lightnovel.shelf/reader_volume_keys',
+  'app.lightnovel.shelf.plus/reader_volume_keys',
 );
 const StandardMethodCodec _codec = StandardMethodCodec();
 
