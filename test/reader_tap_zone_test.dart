@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/reader/widgets/reader_tap_zone.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_tap_zone.dart';
 
 /// 小说分页、漫画分页、漫画连续三种热区的翻页方向。
 void main() {

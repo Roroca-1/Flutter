@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/core/platform/reader_volume_keys.dart';
+import 'package:lightnovel_shelf_plus/core/platform/reader_volume_keys.dart';
 
 const MethodChannel _channel = MethodChannel(
   'app.lightnovel.shelf/reader_volume_keys',

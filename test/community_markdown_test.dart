@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/community/community_compose_screen.dart';
+import 'package:lightnovel_shelf_plus/features/community/community_compose_screen.dart';
 
 void main() {
   test('converts community Markdown to HTML', () {

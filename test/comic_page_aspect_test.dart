@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/data/api/models.dart';
+import 'package:lightnovel_shelf_plus/data/api/models.dart';
 
 void main() {
   test('整页比例取自地址上的 size，横跨两页的宽图不再按竖版占位', () {

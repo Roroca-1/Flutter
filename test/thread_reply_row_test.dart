@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/widgets/comments/thread_reply_row.dart';
-import 'package:lightnovel/shared/widgets/user_avatar.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/comments/thread_reply_row.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/user_avatar.dart';
 
 /// 社区回复与公告/书籍评论共用同一套缩进与分组线，改动任一端都得对齐这里的量。
 Future<void> _pump(WidgetTester tester, Widget child) => tester.pumpWidget(

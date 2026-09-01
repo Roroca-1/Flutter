@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show OverflowBoxFit, RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:lightnovel/shared/widgets/html_content.dart';
-import 'package:lightnovel/shared/widgets/html/html_source.dart';
-import 'package:lightnovel/shared/widgets/blurhash_image.dart';
-import 'package:lightnovel/shared/widgets/image_preview.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html_content.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/html_source.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/blurhash_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/image_preview.dart';
 
 void main() {
   test('compact source removes scripts and images but preserves blocks', () {

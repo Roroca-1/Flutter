@@ -3,7 +3,7 @@ import 'dart:ui' show Tristate;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/reader/widgets/reader_chrome.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_chrome.dart';
 
 Widget buildChrome({
   bool visible = true,

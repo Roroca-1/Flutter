@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/widgets/comments/reply_compose_sheet.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/comments/reply_compose_sheet.dart';
 
 /// 发表面板跟随键盘时的重建范围与取焦时机。
 

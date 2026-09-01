@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/reader/reader_pagination.dart';
+import 'package:lightnovel_shelf_plus/features/reader/reader_pagination.dart';
 
 /// 行顶 + 块底构成的候选断点表：`step` 是行高，`count` 是行数。
 List<double> _lineBreaks(double step, int count) => <double>[

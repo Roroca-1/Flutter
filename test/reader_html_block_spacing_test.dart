@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/widgets/html/reader_content_style.dart';
-import 'package:lightnovel/shared/widgets/reader_html_block.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/reader_content_style.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/reader_html_block.dart';
 
 const _style = ReaderContentStyle(
   fontSize: 16,

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/core/platform/stores.dart';
-import 'package:lightnovel/data/api/models/book.dart';
-import 'package:lightnovel/data/providers.dart';
-import 'package:lightnovel/data/settings/app_settings.dart';
-import 'package:lightnovel/features/reader/widgets/reader_theme.dart';
+import 'package:lightnovel_shelf_plus/core/platform/stores.dart';
+import 'package:lightnovel_shelf_plus/data/api/models/book.dart';
+import 'package:lightnovel_shelf_plus/data/providers.dart';
+import 'package:lightnovel_shelf_plus/data/settings/app_settings.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_theme.dart';
 
 class _MemoryStore implements KeyValueStore {
   final Map<String, String> values = <String, String>{};

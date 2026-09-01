@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/core/platform/stores.dart';
-import 'package:lightnovel/data/session/auth_controller.dart';
-import 'package:lightnovel/data/session/visitor_id.dart';
+import 'package:lightnovel_shelf_plus/core/platform/stores.dart';
+import 'package:lightnovel_shelf_plus/data/session/auth_controller.dart';
+import 'package:lightnovel_shelf_plus/data/session/visitor_id.dart';
 
 class _FakeCredentialStore implements CredentialStore {
   _FakeCredentialStore([Map<String, String>? initial])

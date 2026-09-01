@@ -5,11 +5,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:lightnovel/shared/widgets/blurhash_image.dart';
-import 'package:lightnovel/shared/widgets/book_image.dart';
-import 'package:lightnovel/shared/widgets/image_preview.dart';
-import 'package:lightnovel/shared/widgets/html/reader_content_style.dart';
-import 'package:lightnovel/shared/widgets/reader_html_block.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/blurhash_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/book_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/image_preview.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/reader_content_style.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/reader_html_block.dart';
 import 'package:photo_view/photo_view.dart';
 
 const _hash = 'LEHV6nWB2yk8pyo0adR*.7kCMdnj';

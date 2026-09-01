@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/auth/welcome_screen.dart';
+import 'package:lightnovel_shelf_plus/features/auth/welcome_screen.dart';
 
 void main() {
   for (final brightness in Brightness.values) {

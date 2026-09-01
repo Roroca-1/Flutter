@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/reader/widgets/reader_shell.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_shell.dart';
 
 /// 观察某一层的 State 有没有被丢掉。
 class _Probe extends StatefulWidget {

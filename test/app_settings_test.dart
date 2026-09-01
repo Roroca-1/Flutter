@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/data/settings/app_settings.dart';
+import 'package:lightnovel_shelf_plus/data/settings/app_settings.dart';
 
 void main() {
   test('两端对齐设置默认关闭，并可复制与持久化', () {

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
-import 'package:lightnovel/shared/cover_seed.dart';
+import 'package:lightnovel_shelf_plus/shared/cover_seed.dart';
 
 /// 构造 rawRgba 像素数据，`colors` 按顺序每种各占 `repeat` 个像素。
 Uint8List _rawRgba(List<Color> colors, {int repeat = 64}) {

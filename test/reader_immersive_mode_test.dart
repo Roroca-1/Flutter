@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/core/platform/reader_immersive_mode.dart';
+import 'package:lightnovel_shelf_plus/core/platform/reader_immersive_mode.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

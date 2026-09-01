@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/core/network/api_error.dart';
-import 'package:lightnovel/shared/paging/paged_list.dart';
-import 'package:lightnovel/shared/paging/paged_list_controller.dart';
+import 'package:lightnovel_shelf_plus/core/network/api_error.dart';
+import 'package:lightnovel_shelf_plus/shared/paging/paged_list.dart';
+import 'package:lightnovel_shelf_plus/shared/paging/paged_list_controller.dart';
 
 /// 分页控制器测试桩：每页的 fetch 行为由 [handler] 决定。
 class _TestController extends PagedListController<int, void> {

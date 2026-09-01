@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:lightnovel/shared/widgets/html/html_source.dart';
-import 'package:lightnovel/shared/widgets/html/reader_content_style.dart';
-import 'package:lightnovel/shared/widgets/blurhash_image.dart';
-import 'package:lightnovel/shared/widgets/book_image.dart';
-import 'package:lightnovel/shared/widgets/image_preview.dart';
-import 'package:lightnovel/shared/widgets/html_content.dart';
-import 'package:lightnovel/features/reader/widgets/reader_content_view.dart';
-import 'package:lightnovel/features/reader/widgets/reader_measure_box.dart';
-import 'package:lightnovel/features/reader/widgets/reader_page_body.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/html_source.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/reader_content_style.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/blurhash_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/book_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/image_preview.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html_content.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_content_view.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_measure_box.dart';
+import 'package:lightnovel_shelf_plus/features/reader/widgets/reader_page_body.dart';
 
 import 'support/reader_screen.dart';
 

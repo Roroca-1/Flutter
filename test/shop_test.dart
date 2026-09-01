@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/data/api/models.dart';
-import 'package:lightnovel/features/settings/sign_in_sheet.dart';
-import 'package:lightnovel/features/shop/shop_screen.dart';
+import 'package:lightnovel_shelf_plus/data/api/models.dart';
+import 'package:lightnovel_shelf_plus/features/settings/sign_in_sheet.dart';
+import 'package:lightnovel_shelf_plus/features/shop/shop_screen.dart';
 
 void main() {
   test('decodes shop catalog and clamps remaining monthly purchases', () {

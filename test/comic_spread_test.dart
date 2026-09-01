@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/features/reader/reader_comic_paging.dart';
+import 'package:lightnovel_shelf_plus/features/reader/reader_comic_paging.dart';
 
 /// 竖版单页与横跨两页的宽图。
 const double _portrait = 1.5;

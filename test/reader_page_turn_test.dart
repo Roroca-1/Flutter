@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/data/settings/app_settings.dart';
-import 'package:lightnovel/features/reader/reader_page_turn.dart';
+import 'package:lightnovel_shelf_plus/data/settings/app_settings.dart';
+import 'package:lightnovel_shelf_plus/features/reader/reader_page_turn.dart';
 
 Future<PageController> _pumpPages(WidgetTester tester) async {
   final controller = PageController();

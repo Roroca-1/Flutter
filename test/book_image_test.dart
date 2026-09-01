@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/widgets/blurhash_image.dart';
-import 'package:lightnovel/shared/widgets/book_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/blurhash_image.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/book_image.dart';
 
 /// 封面从 BlurHash 占位过渡到真实封面的结构约束。
 ///

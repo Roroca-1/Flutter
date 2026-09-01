@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/widgets/color_picker_sheet.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/color_picker_sheet.dart';
 
 Future<void> _openPicker(
   WidgetTester tester,

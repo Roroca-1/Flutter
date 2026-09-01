@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/core/platform/app_system_ui.dart';
+import 'package:lightnovel_shelf_plus/core/platform/app_system_ui.dart';
 
 void main() {
   test('默认系统栏样式禁用透明栏对比度遮罩', () {

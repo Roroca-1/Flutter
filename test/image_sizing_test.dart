@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/image_sizing.dart';
+import 'package:lightnovel_shelf_plus/shared/image_sizing.dart';
 
 /// 图床按尺寸取图的客户端约定。
 ///

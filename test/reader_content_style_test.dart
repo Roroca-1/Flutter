@@ -1,7 +1,7 @@
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lightnovel/shared/widgets/html/html_source.dart';
-import 'package:lightnovel/shared/widgets/html/reader_content_style.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/html_source.dart';
+import 'package:lightnovel_shelf_plus/shared/widgets/html/reader_content_style.dart';
 
 const _style = ReaderContentStyle(
   fontSize: 18,

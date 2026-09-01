@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lightnovel/core/network/request_scheduler.dart';
-import 'package:lightnovel/core/network/signalr_connection.dart';
-import 'package:lightnovel/core/platform/stores.dart';
-import 'package:lightnovel/data/api/api_client.dart';
-import 'package:lightnovel/data/providers.dart';
-import 'package:lightnovel/data/settings/app_settings.dart';
-import 'package:lightnovel/features/discover/book_list_screen.dart';
-import 'package:lightnovel/features/discover/novel_series_books_screen.dart';
-import 'package:lightnovel/features/discover/widgets/novel_series_tile.dart';
+import 'package:lightnovel_shelf_plus/core/network/request_scheduler.dart';
+import 'package:lightnovel_shelf_plus/core/network/signalr_connection.dart';
+import 'package:lightnovel_shelf_plus/core/platform/stores.dart';
+import 'package:lightnovel_shelf_plus/data/api/api_client.dart';
+import 'package:lightnovel_shelf_plus/data/providers.dart';
+import 'package:lightnovel_shelf_plus/data/settings/app_settings.dart';
+import 'package:lightnovel_shelf_plus/features/discover/book_list_screen.dart';
+import 'package:lightnovel_shelf_plus/features/discover/novel_series_books_screen.dart';
+import 'package:lightnovel_shelf_plus/features/discover/widgets/novel_series_tile.dart';
 
 /// 全部小说列表的单本 / 系列视图切换。
 
