@@ -176,7 +176,6 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     final snapshot = ref.read(shelfProvider).value;
     if (snapshot == null) return;
     final editor = _editor;
-    final draft = editor.effectiveDraft(snapshot);
     final dirty = editor.isDirty(snapshot);
     final command = await ShelfManageSheet.show(
       context,

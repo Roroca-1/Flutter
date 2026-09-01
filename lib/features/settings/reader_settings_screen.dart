@@ -10,6 +10,7 @@ import '../../data/api/models/book.dart';
 import '../../data/repositories/user_font_repository.dart';
 import '../../shared/widgets/color_picker_sheet.dart';
 import '../../shared/widgets/settings_rows.dart';
+import '../../shared/widgets/app_dialogs.dart';
 
 /// 自定义阅读背景的预设色：浅色纸张与深色底各几档。
 const List<String> _readerBackgroundPresets = <String>[
@@ -205,7 +206,9 @@ class ReaderSettingsContent extends ConsumerWidget {
                   ],
                   onChanged: (value) {
                     if (value == ReaderFontSetting.custom &&
-                        settings.customReaderFontPath == null) return;
+                        settings.customReaderFontPath == null) {
+                      return;
+                    }
                     controller.update((settings) => settings.copyWith(readerFont: value));
                   },
                 ),

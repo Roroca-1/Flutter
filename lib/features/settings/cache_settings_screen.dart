@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../data/providers.dart';
-import '../../data/repositories/book_metadata_cache.dart';
 import '../../shared/image_cache.dart';
 import '../../shared/widgets/app_dialogs.dart';
 import '../../shared/widgets/book_image.dart';

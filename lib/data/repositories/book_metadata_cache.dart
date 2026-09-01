@@ -18,12 +18,13 @@ class BookMetadataCache {
     final missing = ids.where((id) => !cached.containsKey(id)).toList();
     if (missing.isNotEmpty) {
       final fetched = await loader(missing);
-      for (final book in fetched) cached[book.id] = book;
+      for (final book in fetched) {
+        cached[book.id] = book;
+      }
       await _write(cached);
     }
     return <BookListItem>[
-      for (final id in ids)
-        if (cached[id] case final book?) book,
+      for (final id in ids) ?cached[id],
     ];
   }
 
