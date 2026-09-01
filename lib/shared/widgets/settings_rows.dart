@@ -75,7 +75,6 @@ class SettingsRow extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.enabled = true,
-    this.optionTextStyle,
   });
 
   final String title;
@@ -84,7 +83,6 @@ class SettingsRow extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool enabled;
-  final TextStyle? Function(T value)? optionTextStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +215,7 @@ class SettingsPickerRow<T> extends StatelessWidget {
     required this.options,
     required this.onChanged,
     this.enabled = true,
+    this.optionTextStyle,
   });
 
   final String title;
@@ -226,6 +225,7 @@ class SettingsPickerRow<T> extends StatelessWidget {
   final List<(T value, String label)> options;
   final ValueChanged<T> onChanged;
   final bool enabled;
+  final TextStyle? Function(T value)? optionTextStyle;
 
   @override
   Widget build(BuildContext context) {

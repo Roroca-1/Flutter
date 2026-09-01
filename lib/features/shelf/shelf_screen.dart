@@ -402,7 +402,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final shelfPreferences = ref.watch(
+    ref.watch(
       appSettingsProvider.select(
         (settings) => (
           settings.shelfSort,
