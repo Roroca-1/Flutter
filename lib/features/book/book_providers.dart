@@ -7,6 +7,7 @@ import '../../data/api/api_client.dart';
 import '../../data/api/models.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/shelf_draft.dart';
+import '../../data/repositories/local_comic_shelf_repository.dart';
 import '../../data/repositories/shelf_repository.dart';
 
 /// 漫画与小说走不同接口，类型必须进缓存键。
@@ -96,5 +97,33 @@ final NotifierProviderFamily<ShelfToggleController, ShelfToggle, int>
 shelfToggleProvider =
     NotifierProvider.family<ShelfToggleController, ShelfToggle, int>(
       ShelfToggleController.new,
+      isAutoDispose: true,
+    );
+
+class LocalComicShelfToggleController extends Notifier<ShelfToggle> {
+  LocalComicShelfToggleController(this.comicId);
+
+  final int comicId;
+
+  @override
+  ShelfToggle build() => const ShelfToggle();
+
+  Future<void> toggle(LocalShelfComic comic, bool inShelf) async {
+    state = ShelfToggle(busy: true, inShelf: !inShelf);
+    try {
+      final result = await ref
+          .read(localComicShelfProvider.notifier)
+          .toggle(comic);
+      if (ref.mounted) state = ShelfToggle(inShelf: result);
+    } catch (_) {
+      if (!ref.mounted) return;
+      state = ShelfToggle(error: '无法更新本地漫画书架。');
+    }
+  }
+}
+
+final localComicShelfToggleProvider =
+    NotifierProvider.family<LocalComicShelfToggleController, ShelfToggle, int>(
+      LocalComicShelfToggleController.new,
       isAutoDispose: true,
     );

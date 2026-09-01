@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/repositories/local_comic_shelf_repository.dart';
 import '../../../shared/format.dart';
 import '../book_providers.dart';
 
@@ -12,6 +13,7 @@ class BookActionRow extends ConsumerWidget {
     required this.bundle,
     required this.currentIndex,
     required this.onRead,
+    required this.comicSeriesTitle,
   });
 
   final int bookId;
@@ -20,15 +22,26 @@ class BookActionRow extends ConsumerWidget {
   /// 当前阅读到的章节下标，`-1` 表示未读。
   final int currentIndex;
   final void Function(int sortNum) onRead;
+  final String comicSeriesTitle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final detail = bundle.detail;
     final hasChapters = detail.chapters.isNotEmpty;
-    final shelf = ref.watch(shelfToggleProvider(bookId));
-    final resolvedInShelf =
-        shelf.inShelf ?? ref.watch(bookInShelfProvider(bookId)).value ?? false;
+    final shelf = bundle.isComic
+        ? ref.watch(localComicShelfToggleProvider(bookId))
+        : ref.watch(shelfToggleProvider(bookId));
+    final resolvedInShelf = bundle.isComic
+        ? shelf.inShelf ??
+              ref
+                  .watch(localComicShelfProvider)
+                  .value
+                  ?.any((comic) => comic.id == bookId) ??
+              false
+        : shelf.inShelf ??
+              ref.watch(bookInShelfProvider(bookId)).value ??
+              false;
     final continueTitle = currentIndex >= 0
         ? cleanChapterTitle(detail.chapters[currentIndex].title)
         : null;
@@ -41,8 +54,6 @@ class BookActionRow extends ConsumerWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            // 漫画按系列聚合，没有单卷书架条目。
-            if (!bundle.isComic) ...<Widget>[
               SizedBox(
                 width: 56,
                 height: 56,
@@ -55,9 +66,35 @@ class BookActionRow extends ConsumerWidget {
                   child: InkWell(
                     onTap: shelf.busy
                         ? null
-                        : () => ref
-                              .read(shelfToggleProvider(bookId).notifier)
-                              .toggle(resolvedInShelf),
+                        : () {
+                            if (bundle.isComic) {
+                              final detail = bundle.detail;
+                              ref
+                                  .read(
+                                    localComicShelfToggleProvider(
+                                      bookId,
+                                    ).notifier,
+                                  )
+                                  .toggle(
+                                    LocalShelfComic(
+                                      id: bookId,
+                                      title: detail.title,
+                                      seriesTitle: comicSeriesTitle,
+                                      coverUrl: detail.coverUrl,
+                                      coverPlaceholder:
+                                          detail.coverPlaceholder,
+                                      authorName: detail.authorName,
+                                      lastUpdatedAt: detail.lastUpdatedAt,
+                                      addedAt: DateTime.now(),
+                                    ),
+                                    resolvedInShelf,
+                                  );
+                              return;
+                            }
+                            ref
+                                .read(shelfToggleProvider(bookId).notifier)
+                                .toggle(resolvedInShelf);
+                          },
                     child: Center(
                       child: shelf.busy
                           ? const SizedBox(
@@ -81,7 +118,6 @@ class BookActionRow extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-            ],
             Expanded(
               child: SizedBox(
                 height: 56,
