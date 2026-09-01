@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/api/models.dart';
 import '../../data/api/requests.dart';
 import '../../data/providers.dart';
+import '../../data/repositories/shelf_repository.dart';
 
 Future<void> showBookContextMenu({
   required BuildContext context,
