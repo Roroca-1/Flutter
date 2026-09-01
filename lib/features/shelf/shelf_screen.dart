@@ -9,6 +9,7 @@ import '../../data/api/models.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/shelf_draft.dart';
 import '../../data/repositories/shelf_repository.dart';
+import '../../data/repositories/local_comic_shelf_repository.dart';
 import '../../shared/layout/book_grid_layout.dart';
 import '../../shared/paging/identity_child_delegate.dart';
 import '../../shared/widgets/app_dialogs.dart';
@@ -418,6 +419,8 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     final async = ref.watch(shelfProvider);
     final editor = ref.watch(shelfEditorProvider(_editorKey));
     final snapshot = async.value;
+    final localComics = ref.watch(localComicShelfProvider).value ??
+        const <LocalShelfComic>[];
     final controller = _editor;
     final dirty = snapshot != null && controller.isDirty(snapshot);
     final draft = snapshot == null ? null : controller.effectiveDraft(snapshot);
@@ -481,7 +484,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
               )
             : RefreshIndicator(
                 onRefresh: () => ref.read(shelfProvider.notifier).reload(),
-                child: _body(async, editor, snapshot, draft),
+                child: _body(async, editor, snapshot, draft, localComics),
               ),
       ),
     );
@@ -492,6 +495,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     ShelfEditorState editor,
     ShelfSnapshot? snapshot,
     ShelfDraft? draft,
+    List<LocalShelfComic> localComics,
   ) {
     final media = MediaQuery.sizeOf(context);
     final layout = BookGridLayout.of(media.width);
@@ -529,9 +533,35 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     }
 
     final level = _editor.level(snapshot, draft);
-    final siblings = editor.mode == ShelfMode.browse
+    final serverSiblings = editor.mode == ShelfMode.browse
         ? _sortedSiblings(level)
         : level.siblings;
+    final localBooks = <int, BookListItem>{};
+    final localItems = <ShelfItem>[];
+    if (_parents.isEmpty && editor.mode == ShelfMode.browse) {
+      for (final comic in localComics) {
+        final localId = -comic.id;
+        localBooks[localId] = comic.toBookListItem();
+        localItems.add(
+          ShelfItem.book(
+            id: localId,
+            index: -1,
+            parents: const <String>[],
+            updatedAt: comic.addedAt.toUtc().toIso8601String(),
+          ),
+        );
+      }
+    }
+    final displayLevel = ShelfLevel(
+      siblings: <ShelfItem>[...serverSiblings, ...localItems],
+      bookById: <int, BookListItem>{...level.bookById, ...localBooks},
+      folderPreviews: level.folderPreviews,
+    );
+    final siblings = _sort == ShelfSortMode.manual
+        ? displayLevel.siblings
+        : (List<ShelfItem>.of(displayLevel.siblings)..sort(
+            (left, right) => _compareShelfItems(left, right, displayLevel),
+          ));
     final refreshError = async.hasError
         ? describeShelfError(async.error!)
         : null;
@@ -601,7 +631,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             ),
           )
         else if (_seriesView && editor.mode == ShelfMode.browse)
-          _seriesGrid(level, layout, siblings)
+          _seriesGrid(displayLevel, layout, siblings)
         else
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
@@ -622,13 +652,14 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                   item: item,
                   index: index,
                   siblings: siblings,
-                  book: item.isBook ? level.bookById[item.bookId] : null,
+                  book: item.isBook ? displayLevel.bookById[item.bookId] : null,
                   folder: item.isBook
                       ? null
                       : level.folderPreviews[item.folderId],
                   tileWidth: layout.tileWidth,
                   onOpenBook: _openBook,
                   onOpenFolder: _openFolder,
+                  selectable: (item.bookId ?? 0) >= 0,
                 ),
               ),
             ),
@@ -745,6 +776,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             tileWidth: layout.tileWidth,
             onOpenBook: _openBook,
             onOpenFolder: _openFolder,
+            selectable: (item.bookId ?? 0) >= 0,
           );
         }, childCount: entries.length),
       ),

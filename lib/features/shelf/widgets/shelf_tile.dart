@@ -21,6 +21,7 @@ class ShelfTile extends ConsumerWidget {
     required this.tileWidth,
     required this.onOpenBook,
     required this.onOpenFolder,
+    this.selectable = true,
   });
 
   final String editorKey;
@@ -36,9 +37,14 @@ class ShelfTile extends ConsumerWidget {
   final double tileWidth;
   final void Function(BookListItem book) onOpenBook;
   final void Function(String folderId) onOpenFolder;
+  final bool selectable;
 
   /// 选择模式下点击是切换选中；`open` 为空表示条目已下架，只能被选中。
   void _handleTap(WidgetRef ref, VoidCallback? open) {
+    if (!selectable) {
+      open?.call();
+      return;
+    }
     final provider = shelfEditorProvider(editorKey);
     final editor = ref.read(provider.notifier);
     if (ref.read(provider).mode == ShelfMode.select) {
@@ -71,7 +77,7 @@ class ShelfTile extends ConsumerWidget {
           selected: selected,
           sorting: sorting,
           onTap: () => _handleTap(ref, null),
-          onLongPress: beginSelection,
+          onLongPress: selectable ? beginSelection : null,
         );
       } else {
         tile = BookCoverGridItem.fromBook(
