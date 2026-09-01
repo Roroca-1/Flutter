@@ -249,12 +249,12 @@ class ReaderSettingsContent extends ConsumerWidget {
                 ),
             ],
           ),
-          if (!comic && enableReaderFonts) ...<Widget>[
+          if (!comic) ...<Widget>[
             const SizedBox(height: 20),
             SettingsSection(
               title: '排版',
               children: <Widget>[
-                SettingsPickerRow<ReaderFontSetting>(
+                if (enableReaderFonts) SettingsPickerRow<ReaderFontSetting>(
                   title: '阅读字体',
                   description: settings.readerFont == ReaderFontSetting.custom
                       ? settings.customReaderFontName ?? '自定义字体'
@@ -282,7 +282,7 @@ class ReaderSettingsContent extends ConsumerWidget {
                     controller.update((settings) => settings.copyWith(readerFont: value));
                   },
                 ),
-                SettingsRow(
+                if (enableReaderFonts) SettingsRow(
                   title: '字体预览',
                   description: '轻书架Plus · 中文字体预览 · Aa 123',
                   icon: Icons.preview_outlined,
@@ -294,7 +294,7 @@ class ReaderSettingsContent extends ConsumerWidget {
                     ),
                   ),
                 ),
-                SettingsRow(
+                if (enableReaderFonts) SettingsRow(
                   title: '导入字体',
                   description: '支持 TTF、OTF、TTC、OTC、WOFF 与 WOFF2',
                   icon: Icons.upload_file_outlined,

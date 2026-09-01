@@ -117,10 +117,10 @@ Future<_FakeApi> _open(WidgetTester tester) async {
   return api;
 }
 
-Future<void> _switchTo(WidgetTester tester, String label) async {
-  await tester.tap(find.byTooltip('展示方式'));
-  await tester.pumpAndSettle();
-  await tester.tap(find.text(label));
+Future<void> _toggleSeries(WidgetTester tester) async {
+  final toSeries = find.byTooltip('按系列显示');
+  final toBooks = find.byTooltip('按单本显示');
+  await tester.tap(toSeries.evaluate().isNotEmpty ? toSeries : toBooks);
   await tester.pumpAndSettle();
 }
 
@@ -136,7 +136,7 @@ void main() {
   testWidgets('切到系列模式后按系列分组展示', (tester) async {
     final api = await _open(tester);
 
-    await _switchTo(tester, '系列');
+    await _toggleSeries(tester);
 
     expect(find.byType(NovelSeriesTile), findsOneWidget);
     expect(find.text('系列甲'), findsOneWidget);
@@ -153,7 +153,7 @@ void main() {
   testWidgets('系列模式下换排序会重新按新排序取系列', (tester) async {
     final api = await _open(tester);
 
-    await _switchTo(tester, '系列');
+    await _toggleSeries(tester);
     await tester.tap(find.text('最多阅读'));
     await tester.pumpAndSettle();
 
@@ -167,7 +167,7 @@ void main() {
   testWidgets('点系列卡片进入系列内书籍', (tester) async {
     final api = await _open(tester);
 
-    await _switchTo(tester, '系列');
+    await _toggleSeries(tester);
     await tester.tap(find.byType(NovelSeriesTile));
     await tester.pumpAndSettle();
 
@@ -183,8 +183,8 @@ void main() {
   testWidgets('切回单本模式回到平铺列表', (tester) async {
     await _open(tester);
 
-    await _switchTo(tester, '系列');
-    await _switchTo(tester, '单本');
+    await _toggleSeries(tester);
+    await _toggleSeries(tester);
 
     expect(find.text('单本甲'), findsOneWidget);
     expect(find.byType(NovelSeriesTile), findsNothing);
