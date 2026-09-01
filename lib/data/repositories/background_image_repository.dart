@@ -31,6 +31,11 @@ class BackgroundImageRepository {
       picked = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         requestFullMetadata: false,
+        // A full-resolution camera photo wastes memory and decode time when it
+        // is only ever used as a dimmed app background.
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 68,
       );
     } else {
       picked = await openFile(

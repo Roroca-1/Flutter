@@ -9,6 +9,11 @@ on:
         description: Release tag (for example v1.8.0-plus.2)
         required: true
         type: string
+      publish:
+        description: Publish a public GitHub Release after all builds pass
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -31,8 +36,6 @@ jobs:
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -70,8 +73,6 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ env.RELEASE_TAG }}
       - name: Install Linux build dependencies
         run: >
           sudo apt-get update && sudo apt-get install -y
@@ -120,8 +121,6 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ env.RELEASE_TAG }}
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.0
@@ -143,6 +142,7 @@ jobs:
           retention-days: 30
 
   publish:
+    if: github.event_name != 'workflow_dispatch' || inputs.publish
     needs: [android, linux, windows]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -155,6 +155,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: dist/*

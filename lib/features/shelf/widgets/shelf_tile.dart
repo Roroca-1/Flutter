@@ -121,7 +121,21 @@ class ShelfTile extends ConsumerWidget {
       );
     }
 
-    if (!sorting) return tile;
+    final keyboardTile = CallbackShortcuts(
+      bindings: selectable
+          ? <ShortcutActivator, VoidCallback>{
+              const SingleActivator(LogicalKeyboardKey.space): () {
+                if (ref.read(provider).mode == ShelfMode.select) {
+                  ref.read(provider.notifier).toggleSelection(item);
+                } else {
+                  beginSelection();
+                }
+              },
+            }
+          : const <ShortcutActivator, VoidCallback>{},
+      child: tile,
+    );
+    if (!sorting) return keyboardTile;
     return DragTarget<int>(
       onWillAcceptWithDetails: (details) => details.data != index,
       onAcceptWithDetails: (details) =>
@@ -147,7 +161,7 @@ class ShelfTile extends ConsumerWidget {
               width: 2,
             ),
           ),
-          child: tile,
+          child: keyboardTile,
         ),
       ),
     );

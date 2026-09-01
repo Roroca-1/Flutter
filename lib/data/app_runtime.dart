@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../core/network/request_scheduler.dart';
 import '../core/network/signalr_connection.dart';
+import '../core/feature_flags.dart';
 import '../core/platform/stores.dart';
 import 'api/api_client.dart';
 import 'api/endpoints.dart';
@@ -36,7 +37,7 @@ class AppRuntime {
     final keyValueStore = await PreferencesKeyValueStore.open();
     final settings = await SettingsController.load(keyValueStore);
     final customFontPath = settings.settings.customReaderFontPath;
-    if (customFontPath != null) {
+    if (enableReaderFonts && customFontPath != null) {
       try {
         await UserFontRepository.instance.load(customFontPath);
       } catch (_) {

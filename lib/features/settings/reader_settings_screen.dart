@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/app_theme.dart';
 import '../../core/platform/reader_immersive_mode.dart';
+import '../../core/feature_flags.dart';
 import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
 import '../../data/api/models/book.dart';
@@ -248,7 +249,7 @@ class ReaderSettingsContent extends ConsumerWidget {
                 ),
             ],
           ),
-          if (!comic) ...<Widget>[
+          if (!comic && enableReaderFonts) ...<Widget>[
             const SizedBox(height: 20),
             SettingsSection(
               title: '排版',

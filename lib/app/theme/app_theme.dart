@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../../data/settings/app_settings.dart';
@@ -236,15 +235,31 @@ ThemeData _buildAppTheme({
       backgroundColor: scheme.inverseSurface,
       contentTextStyle: TextStyle(color: scheme.onInverseSurface),
     ),
-    // 默认的 FadeForwards 转场 450ms 全程合成两个全屏 opacity 层且不做快照，切页时
-    // 与新页首次 build/layout/解码撞在一起。Zoom 系转场一次栅格捕获后只做纹理变换。
+    // Transparent pages share the persistent application background. Animated
+    // route composition would briefly show both pages and looks like a flash or
+    // overlap, while also adding a full-screen GPU pass.
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
-        TargetPlatform.android:
-            PredictiveBackFullscreenPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: _InstantPageTransitionsBuilder(),
+        TargetPlatform.iOS: _InstantPageTransitionsBuilder(),
+        TargetPlatform.linux: _InstantPageTransitionsBuilder(),
+        TargetPlatform.macOS: _InstantPageTransitionsBuilder(),
+        TargetPlatform.windows: _InstantPageTransitionsBuilder(),
+        TargetPlatform.fuchsia: _InstantPageTransitionsBuilder(),
       },
     ),
   );
+}
+
+class _InstantPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _InstantPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
 }

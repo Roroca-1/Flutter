@@ -13,6 +13,7 @@ import '../../data/api/models/book.dart';
 import '../../data/providers.dart';
 import '../../data/settings/app_settings.dart';
 import '../../data/repositories/user_font_repository.dart';
+import '../../core/feature_flags.dart';
 import '../../shared/format.dart';
 import '../../shared/widgets/html/reader_content_style.dart';
 import 'reader_chapter_prerenderer.dart';
@@ -108,7 +109,7 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
       bookId: widget.bookId,
     );
     final customPath = ref.read(appSettingsProvider).customReaderFontPath;
-    if (customPath != null) {
+    if (enableReaderFonts && customPath != null) {
       unawaited(() async {
         try {
           await UserFontRepository.instance.load(customPath);
@@ -292,7 +293,9 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
   }
 
   ReaderContentStyle _contentStyle(AppSettings settings, String? chapterFont) {
-    final selected = UserFontRepository.instance.selectedFamily(settings);
+    final selected = enableReaderFonts
+        ? UserFontRepository.instance.selectedFamily(settings)
+        : null;
     return ReaderContentStyle(
         fontSize: settings.fontSize,
         lineHeight: settings.readerLineHeight,

@@ -944,25 +944,36 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
               final selected = _state.selected.contains(item.key);
               return KeyedSubtree(
                 key: _itemKey(item),
-                child: BookListRow(
-                  book: book,
-                  onSecondaryTap: (position) => _showBookMenu(book, position),
-                  selected: selected,
-                  onLongPress: () => _editor.beginSelection(item),
-                  onFocusChange: (focused) {
-                    if (focused) _focusedItem = item;
+                child: CallbackShortcuts(
+                  bindings: <ShortcutActivator, VoidCallback>{
+                    const SingleActivator(LogicalKeyboardKey.space): () {
+                      if (_state.mode == ShelfMode.select) {
+                        _editor.toggleSelection(item);
+                      } else {
+                        _editor.beginSelection(item);
+                      }
+                    },
                   },
-                  onTap: () => _state.mode == ShelfMode.select
-                      ? _editor.toggleSelection(item)
-                      : (HardwareKeyboard.instance.isControlPressed ||
-                                HardwareKeyboard.instance.isMetaPressed ||
-                                HardwareKeyboard.instance.isShiftPressed)
-                          ? _modifiedSelect(
-                              item,
-                              siblings,
-                              HardwareKeyboard.instance.isShiftPressed,
-                            )
-                          : _openBook(book),
+                  child: BookListRow(
+                    book: book,
+                    onSecondaryTap: (position) => _showBookMenu(book, position),
+                    selected: selected,
+                    onLongPress: () => _editor.beginSelection(item),
+                    onFocusChange: (focused) {
+                      if (focused) _focusedItem = item;
+                    },
+                    onTap: () => _state.mode == ShelfMode.select
+                        ? _editor.toggleSelection(item)
+                        : (HardwareKeyboard.instance.isControlPressed ||
+                                  HardwareKeyboard.instance.isMetaPressed ||
+                                  HardwareKeyboard.instance.isShiftPressed)
+                            ? _modifiedSelect(
+                                item,
+                                siblings,
+                                HardwareKeyboard.instance.isShiftPressed,
+                              )
+                            : _openBook(book),
+                  ),
                 ),
               );
             }

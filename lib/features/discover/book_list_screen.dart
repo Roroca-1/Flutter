@@ -8,13 +8,14 @@ import '../../shared/widgets/paged_grid.dart';
 import '../../shared/widgets/book_context_menu.dart';
 import '../../shared/widgets/book_list_row.dart';
 import '../../shared/widgets/state_views.dart';
+import '../../shared/widgets/book_image.dart';
+import '../../shared/format.dart';
 import 'catalog_providers.dart';
 import 'widgets/book_grid.dart';
 import 'widgets/novel_order_selector.dart';
 import 'widgets/novel_series_tile.dart';
 
-/// 全部小说的展示方式：平铺或按系列分组。
-enum BookListViewMode { grid, list, series }
+enum BookListDisplayMode { grid, list }
 
 /// 全部小说：展示方式与排序切换，无限滚动。
 class BookListScreen extends ConsumerStatefulWidget {
@@ -26,7 +27,8 @@ class BookListScreen extends ConsumerStatefulWidget {
 
 class _BookListScreenState extends ConsumerState<BookListScreen> {
   BookListOrder _order = BookListOrder.latest;
-  BookListViewMode _mode = BookListViewMode.grid;
+  BookListDisplayMode _displayMode = BookListDisplayMode.grid;
+  bool _seriesView = false;
 
   void _openSeries(NovelSeriesListItem series) {
     // 系列名可能带 `/`，走查询参数而不是路径段。
@@ -49,7 +51,7 @@ class _BookListScreenState extends ConsumerState<BookListScreen> {
   Widget _flatBody() {
     final state = ref.watch(bookCatalogProvider(_order));
     final controller = ref.read(bookCatalogProvider(_order).notifier);
-    if (_mode == BookListViewMode.list) {
+    if (_displayMode == BookListDisplayMode.list) {
       return RefreshIndicator(
         onRefresh: controller.refresh,
         child: NotificationListener<ScrollNotification>(
@@ -156,6 +158,71 @@ class _BookListScreenState extends ConsumerState<BookListScreen> {
   Widget _seriesBody() {
     final state = ref.watch(novelSeriesCatalogProvider(_order));
     final controller = ref.read(novelSeriesCatalogProvider(_order).notifier);
+    if (_displayMode == BookListDisplayMode.list) {
+      return RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.metrics.extentAfter < 600 &&
+                state.hasMore &&
+                !state.loading &&
+                !state.loadingMore &&
+                state.loadMoreError == null) {
+              controller.loadMore();
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                sliver: SliverToBoxAdapter(child: _header()),
+              ),
+              if (state.items.isEmpty && state.loading)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (state.items.isEmpty && state.error != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: ErrorStateView(
+                    message: state.error!,
+                    onRetry: controller.retry,
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  sliver: SliverList.separated(
+                    itemCount: state.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (_, index) {
+                      final series = state.items[index];
+                      return _NovelSeriesListRow(
+                        series: series,
+                        onTap: () => _openSeries(series),
+                      );
+                    },
+                  ),
+                ),
+              if (state.items.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 64,
+                    child: ListFooterStatus(
+                      loading: state.loadingMore,
+                      hasMore: state.hasMore,
+                      error: state.loadMoreError,
+                      onRetry: controller.loadMore,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
     return PagedGrid<NovelSeriesListItem>(
       header: _header(),
       items: state.items,
@@ -184,49 +251,91 @@ class _BookListScreenState extends ConsumerState<BookListScreen> {
     appBar: AppBar(
       title: const Text('全部小说'),
       actions: <Widget>[
-        _ViewModeMenu(
-          mode: _mode,
-          onChanged: (mode) => setState(() => _mode = mode),
+        IconButton(
+          tooltip: _seriesView ? '按单本显示' : '按系列显示',
+          onPressed: () => setState(() => _seriesView = !_seriesView),
+          icon: Icon(
+            _seriesView ? Icons.folder_outlined : Icons.description_outlined,
+          ),
+        ),
+        IconButton(
+          tooltip: _displayMode == BookListDisplayMode.grid
+              ? '切换到列表视图'
+              : '切换到网格视图',
+          onPressed: () => setState(
+            () => _displayMode = _displayMode == BookListDisplayMode.grid
+                ? BookListDisplayMode.list
+                : BookListDisplayMode.grid,
+          ),
+          icon: Icon(
+            _displayMode == BookListDisplayMode.grid
+                ? Icons.view_list_outlined
+                : Icons.grid_view_outlined,
+          ),
         ),
         const SizedBox(width: 4),
       ],
     ),
-    body: _mode == BookListViewMode.series ? _seriesBody() : _flatBody(),
+    body: _seriesView ? _seriesBody() : _flatBody(),
   );
 }
 
-/// 展示方式切换：标题栏图标按钮加下拉菜单。
-class _ViewModeMenu extends StatelessWidget {
-  const _ViewModeMenu({required this.mode, required this.onChanged});
-
-  final BookListViewMode mode;
-  final ValueChanged<BookListViewMode> onChanged;
-
-  static const Map<BookListViewMode, (IconData, String)> _specs =
-      <BookListViewMode, (IconData, String)>{
-        BookListViewMode.grid: (Icons.grid_view_outlined, '单本'),
-        BookListViewMode.list: (Icons.view_list_outlined, '列表'),
-        BookListViewMode.series: (Icons.folder_copy_outlined, '系列'),
-      };
-
+class _NovelSeriesListRow extends StatelessWidget {
+  const _NovelSeriesListRow({required this.series, required this.onTap});
+  final NovelSeriesListItem series;
+  final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => PopupMenuButton<BookListViewMode>(
-    tooltip: '展示方式',
-    icon: Icon(_specs[mode]!.$1),
-    position: PopupMenuPosition.under,
-    onSelected: onChanged,
-    itemBuilder: (_) => <PopupMenuEntry<BookListViewMode>>[
-      for (final entry in _specs.entries)
-        PopupMenuItem<BookListViewMode>(
-          value: entry.key,
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(entry.value.$1),
-            title: Text(entry.value.$2),
-            trailing: entry.key == mode ? const Icon(Icons.check) : null,
-          ),
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 52,
+                height: 78,
+                child: series.coverUrl.isEmpty
+                    ? const ColoredBox(
+                        color: Colors.black12,
+                        child: Icon(Icons.folder_open_outlined),
+                      )
+                    : BookImage(
+                        url: series.coverUrl,
+                        displayHeight: 78,
+                        blurHash: series.coverPlaceholder,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    series.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${series.bookCount} 本 · 更新于 ${formatShortDate(series.lastUpdatedAt)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
         ),
-    ],
+      ),
+    ),
   );
 }
