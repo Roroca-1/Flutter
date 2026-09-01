@@ -268,14 +268,9 @@ class ReaderSettingsContent extends ConsumerWidget {
                     (ReaderFontSetting.custom, '导入的字体'),
                   ],
                   optionTextStyle: (font) => TextStyle(
-                    fontFamily: switch (font) {
-                      ReaderFontSetting.system => null,
-                      ReaderFontSetting.serif => 'serif',
-                      ReaderFontSetting.sansSerif => 'sans-serif',
-                      ReaderFontSetting.monospace => 'monospace',
-                      ReaderFontSetting.custom => UserFontRepository.instance
-                          .loadedFamily(settings.customReaderFontPath),
-                    },
+                    fontFamily: UserFontRepository.instance.selectedFamily(
+                      settings.copyWith(readerFont: font),
+                    ),
                     fontSize: 17,
                   ),
                   onChanged: (value) {
@@ -294,14 +289,7 @@ class ReaderSettingsContent extends ConsumerWidget {
                     '轻书架Plus',
                     style: TextStyle(
                       fontSize: 18,
-                      fontFamily: switch (settings.readerFont) {
-                        ReaderFontSetting.system => null,
-                        ReaderFontSetting.serif => 'serif',
-                        ReaderFontSetting.sansSerif => 'sans-serif',
-                        ReaderFontSetting.monospace => 'monospace',
-                        ReaderFontSetting.custom => UserFontRepository.instance
-                            .loadedFamily(settings.customReaderFontPath),
-                      },
+                      fontFamily: UserFontRepository.instance.selectedFamily(settings),
                     ),
                   ),
                 ),

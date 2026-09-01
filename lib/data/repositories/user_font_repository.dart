@@ -4,7 +4,10 @@ import 'dart:ui' show loadFontFromList;
 
 import 'package:crypto/crypto.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+
+import '../settings/app_settings.dart';
 
 class ImportedReaderFont {
   const ImportedReaderFont(this.path, this.name, this.family);
@@ -63,4 +66,23 @@ class UserFontRepository {
   }
 
   String? loadedFamily(String? path) => path == null ? null : _families[path];
+
+  String? selectedFamily(AppSettings settings) => switch (settings.readerFont) {
+    ReaderFontSetting.system => null,
+    ReaderFontSetting.serif => switch (defaultTargetPlatform) {
+      TargetPlatform.windows => 'SimSun',
+      TargetPlatform.macOS || TargetPlatform.iOS => 'Songti SC',
+      _ => 'Noto Serif CJK SC',
+    },
+    ReaderFontSetting.sansSerif => switch (defaultTargetPlatform) {
+      TargetPlatform.windows => 'Microsoft YaHei',
+      TargetPlatform.macOS || TargetPlatform.iOS => 'PingFang SC',
+      _ => 'Noto Sans CJK SC',
+    },
+    ReaderFontSetting.monospace => switch (defaultTargetPlatform) {
+      TargetPlatform.windows => 'Microsoft YaHei UI',
+      _ => 'Noto Sans Mono CJK SC',
+    },
+    ReaderFontSetting.custom => loadedFamily(settings.customReaderFontPath),
+  };
 }

@@ -7,6 +7,7 @@ import '../../shared/layout/book_grid_layout.dart';
 import '../../shared/paging/identity_child_delegate.dart';
 import '../../shared/paging/scroll_prefetch.dart';
 import '../../shared/widgets/book_cover_grid_item.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import '../../shared/widgets/book_grid_slivers.dart';
 import '../../shared/widgets/state_views.dart';
 import 'search_providers.dart';
@@ -196,6 +197,12 @@ class _SearchResults extends ConsumerWidget {
             item,
             coverHeight: coverHeight,
             onTap: () => onOpenBook(item),
+            onSecondaryTap: (position) => showBookContextMenu(
+              context: context,
+              ref: ref,
+              book: item,
+              globalPosition: position,
+            ),
           ),
         ),
       ),

@@ -258,6 +258,11 @@ class ShelfEditorController extends Notifier<ShelfEditorState> {
     selected: siblings.map((item) => item.key).toSet(),
   );
 
+  void setSelection(Iterable<ShelfItem> items) => state = state.copyWith(
+    mode: ShelfMode.select,
+    selected: items.map((item) => item.key).toSet(),
+  );
+
   void _clearSelection() => state = state.copyWith(selected: const <String>{});
 
   void reorder(List<ShelfItem> siblings, int from, int to) {

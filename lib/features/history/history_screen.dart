@@ -11,6 +11,7 @@ import '../../shared/paging/scroll_prefetch.dart';
 import '../../shared/widgets/book_cover_grid_item.dart';
 import '../../shared/widgets/book_grid_slivers.dart';
 import '../../shared/widgets/book_list_row.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import '../../shared/widgets/state_views.dart';
 import 'history_providers.dart';
 
@@ -152,7 +153,16 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (_, index) {
               final book = tab.items[index];
-              return BookListRow(book: book, onTap: () => _openBook(book));
+              return BookListRow(
+                book: book,
+                onTap: () => _openBook(book),
+                onSecondaryTap: (position) => showBookContextMenu(
+                  context: context,
+                  ref: ref,
+                  book: book,
+                  globalPosition: position,
+                ),
+              );
             },
           ),
         )
@@ -168,6 +178,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 book,
                 coverHeight: layout.coverHeight,
                 onTap: () => _openBook(book),
+                onSecondaryTap: (position) => showBookContextMenu(
+                  context: context,
+                  ref: ref,
+                  book: book,
+                  globalPosition: position,
+                ),
               ),
             ),
           ),

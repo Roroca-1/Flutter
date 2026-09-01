@@ -291,24 +291,18 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
   }
 
   ReaderContentStyle _contentStyle(AppSettings settings, String? chapterFont) {
-    final selected = switch (settings.readerFont) {
-      ReaderFontSetting.system => null,
-      ReaderFontSetting.serif => 'serif',
-      ReaderFontSetting.sansSerif => 'sans-serif',
-      ReaderFontSetting.monospace => 'monospace',
-      ReaderFontSetting.custom => UserFontRepository.instance.loadedFamily(settings.customReaderFontPath),
-    };
+    final selected = UserFontRepository.instance.selectedFamily(settings);
     return ReaderContentStyle(
         fontSize: settings.fontSize,
         lineHeight: settings.readerLineHeight,
         lineSpace: settings.readerLineSpace,
         firstLineIndent: settings.readerFirstLineIndent,
         justify: settings.readerJustify,
-        // A user choice must be the primary family; chapter fonts remain a
-        // fallback for books that use private or uncommon glyphs.
-        fontFamily: selected ?? chapterFont,
+        // 章节字体包含服务端的反复制字形映射，存在时必须优先，否则相同码位会
+        // 被用户字体画成另一个汉字。无章节字体的普通正文才使用用户选择。
+        fontFamily: chapterFont ?? selected,
         fontFamilyFallback: <String>[
-          if (chapterFont != null && selected != null) chapterFont,
+          if (chapterFont != null && selected != null) selected,
           'sans-serif',
           'serif',
         ],

@@ -13,7 +13,8 @@ class BookGridLayout {
   static const double rowGap = 12;
   static const double horizontalPadding = 20;
   static const double coverAspectRatio = 2 / 3;
-  static const double titleBoxHeight = 40;
+  // 桌面端会按系统 DPI 放大文字；40 在 108% 以上会让两行标题溢出。
+  static const double titleBoxHeight = 52;
 
   final int columns;
   final double tileWidth;

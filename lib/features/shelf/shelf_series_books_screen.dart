@@ -8,6 +8,7 @@ import '../../shared/layout/book_grid_layout.dart';
 import '../../shared/paging/identity_child_delegate.dart';
 import '../../shared/widgets/app_dialogs.dart';
 import '../../shared/widgets/book_cover_grid_item.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import '../../shared/widgets/book_list_row.dart';
 
 /// 书架当前层中属于同一系列的小说。这里只展示已收藏的分卷。
@@ -172,6 +173,13 @@ class _ShelfSeriesBooksScreenState
                   return BookListRow(
                     book: book,
                     selected: _selected.contains(book.id),
+                    onSecondaryTap: (position) => showBookContextMenu(
+                      context: context,
+                      ref: ref,
+                      book: book,
+                      globalPosition: position,
+                      onSelect: () => _toggle(book),
+                    ),
                     onLongPress: () => _toggle(book),
                     onTap: () => _selecting
                         ? _toggle(book)
@@ -202,6 +210,13 @@ class _ShelfSeriesBooksScreenState
                   key: ValueKey<int>(book.id),
                   coverHeight: layout.coverHeight,
                   selected: _selected.contains(book.id),
+                  onSecondaryTap: (position) => showBookContextMenu(
+                    context: context,
+                    ref: ref,
+                    book: book,
+                    globalPosition: position,
+                    onSelect: () => _toggle(book),
+                  ),
                   onLongPress: () => _toggle(book),
                   onTap: () => _selecting
                       ? _toggle(book)

@@ -6,6 +6,7 @@ import '../../data/api/models.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/shelf_repository.dart';
 import '../../shared/widgets/book_cover_grid_item.dart';
+import '../../shared/widgets/book_context_menu.dart';
 import '../../shared/widgets/paged_grid.dart';
 import 'catalog_providers.dart';
 import 'widgets/book_grid.dart';
@@ -149,6 +150,13 @@ class _NovelSeriesBooksScreenState
           key: ValueKey<int>(book.id),
           coverHeight: coverHeight,
           selected: _selected.contains(book.id),
+          onSecondaryTap: (position) => showBookContextMenu(
+            context: context,
+            ref: ref,
+            book: book,
+            globalPosition: position,
+            onSelect: () => _toggle(book),
+          ),
           onLongPress: () => _toggle(book),
           onTap: () => _selecting
               ? _toggle(book)

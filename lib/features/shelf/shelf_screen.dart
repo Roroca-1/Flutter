@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kana_kit/kana_kit.dart';
@@ -39,6 +41,115 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
   final Map<String, String> _sortKeyCache = <String, String>{};
   static const KanaKit _kana = KanaKit();
   static final RegExp _kanaPattern = RegExp(r'[\u3040-\u30ff]');
+  String? _selectionAnchor;
+  final GlobalKey _selectionSurfaceKey = GlobalKey();
+  final Map<String, GlobalKey> _itemKeys = <String, GlobalKey>{};
+  List<ShelfItem> _visibleSiblings = const <ShelfItem>[];
+  Offset? _marqueeStart;
+  Offset? _marqueeCurrent;
+  Set<String> _marqueeBaseSelection = const <String>{};
+
+  GlobalKey _itemKey(ShelfItem item) =>
+      _itemKeys.putIfAbsent(item.key, GlobalKey.new);
+
+  void _startMarquee(PointerDownEvent event) {
+    if (event.kind != PointerDeviceKind.mouse ||
+        event.buttons != kPrimaryMouseButton) {
+      return;
+    }
+    _marqueeStart = event.position;
+    _marqueeCurrent = null;
+    _marqueeBaseSelection =
+        (HardwareKeyboard.instance.isControlPressed ||
+                HardwareKeyboard.instance.isMetaPressed)
+            ? Set<String>.of(_state.selected)
+            : const <String>{};
+  }
+
+  void _updateMarquee(PointerMoveEvent event) {
+    final start = _marqueeStart;
+    if (start == null || event.kind != PointerDeviceKind.mouse) return;
+    if ((event.position - start).distance < 6 && _marqueeCurrent == null) return;
+    final area = Rect.fromPoints(start, event.position);
+    final selected = <ShelfItem>[];
+    for (final item in _visibleSiblings) {
+      if (!item.isBook || (item.bookId ?? -1) < 0) continue;
+      final render = _itemKeys[item.key]?.currentContext?.findRenderObject();
+      if (render is! RenderBox || !render.attached) continue;
+      final itemRect = render.localToGlobal(Offset.zero) & render.size;
+      if (area.overlaps(itemRect) || _marqueeBaseSelection.contains(item.key)) {
+        selected.add(item);
+      }
+    }
+    _editor.setSelection(selected);
+    setState(() => _marqueeCurrent = event.position);
+  }
+
+  void _endMarquee(PointerEvent event) {
+    if (_marqueeStart == null) return;
+    setState(() {
+      _marqueeStart = null;
+      _marqueeCurrent = null;
+      _marqueeBaseSelection = const <String>{};
+    });
+  }
+
+  Widget _selectionSurface(Widget child) {
+    final surface = _selectionSurfaceKey.currentContext?.findRenderObject();
+    final start = _marqueeStart;
+    final current = _marqueeCurrent;
+    Rect? localRect;
+    if (surface is RenderBox && start != null && current != null) {
+      localRect = Rect.fromPoints(
+        surface.globalToLocal(start),
+        surface.globalToLocal(current),
+      );
+    }
+    final colors = Theme.of(context).colorScheme;
+    return Listener(
+      onPointerDown: _startMarquee,
+      onPointerMove: _updateMarquee,
+      onPointerUp: _endMarquee,
+      onPointerCancel: _endMarquee,
+      child: Stack(
+        key: _selectionSurfaceKey,
+        children: <Widget>[
+          Positioned.fill(child: child),
+          if (localRect != null)
+            Positioned.fromRect(
+              rect: localRect,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.12),
+                    border: Border.all(color: colors.primary, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _modifiedSelect(ShelfItem item, List<ShelfItem> siblings, bool shift) {
+    if (shift && _selectionAnchor != null) {
+      final start = siblings.indexWhere((entry) => entry.key == _selectionAnchor);
+      final end = siblings.indexWhere((entry) => entry.key == item.key);
+      if (start >= 0 && end >= 0) {
+        final low = start < end ? start : end;
+        final high = start > end ? start : end;
+        _editor.setSelection(siblings.sublist(low, high + 1));
+        return;
+      }
+    }
+    _selectionAnchor = item.key;
+    if (_state.mode != ShelfMode.select) {
+      _editor.beginSelection(item);
+    } else {
+      _editor.toggleSelection(item);
+    }
+  }
 
   ShelfSortSetting get _sort => ref.read(appSettingsProvider).shelfSort;
 
@@ -315,15 +426,30 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         ?.items
         .where((entry) => entry.bookId == book.id)
         .firstOrNull;
+    final selectedCount = _state.selected.length;
+    final isBatch = item != null &&
+        selectedCount > 1 &&
+        _state.selected.contains(item.key);
+    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final local = overlay.globalToLocal(position);
     final action = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, 0),
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(local.dx, local.dy, 1, 1),
+        Offset.zero & overlay.size,
+      ),
       items: <PopupMenuEntry<String>>[
         const PopupMenuItem(value: 'read', child: ListTile(leading: Icon(Icons.play_arrow), title: Text('阅读'))),
         if (book.seriesTitle?.trim().isNotEmpty == true)
           const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.library_books_outlined), title: Text('搜索系列'))),
         const PopupMenuItem(enabled: false, child: ListTile(leading: Icon(Icons.bookmark_added_outlined), title: Text('已在书架'))),
-        const PopupMenuItem(value: 'remove', child: ListTile(leading: Icon(Icons.remove_circle_outline), title: Text('移出书架'))),
+        PopupMenuItem(
+          value: 'remove',
+          child: ListTile(
+            leading: const Icon(Icons.remove_circle_outline),
+            title: Text(isBatch ? '移出所选 $selectedCount 项' : '移出书架'),
+          ),
+        ),
         const PopupMenuItem(value: 'select', child: ListTile(leading: Icon(Icons.checklist_outlined), title: Text('多选'))),
       ],
     );
@@ -334,7 +460,11 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
       case 'series':
         context.push(Uri(path: '/books/series', queryParameters: <String, String>{'name': book.seriesTitle!.trim(), 'order': BookListOrder.latest.wire}).toString());
       case 'remove':
-        await ref.read(shelfProvider.notifier).removeBooks(<int>[book.id]);
+        if (isBatch) {
+          await _removeItems();
+        } else {
+          await ref.read(shelfProvider.notifier).removeBooks(<int>[book.id]);
+        }
       case 'select':
         if (item != null) _editor.beginSelection(item);
     }
@@ -471,7 +601,25 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         if (!discarded || !context.mounted) return;
         if (context.canPop()) context.pop();
       },
-      child: Scaffold(
+      child: Focus(
+        autofocus: true,
+        onKeyEvent: (_, event) {
+          if (event is! KeyDownEvent) return KeyEventResult.ignored;
+          if (event.logicalKey == LogicalKeyboardKey.escape) {
+            if (editor.mode == ShelfMode.select) {
+              controller.setMode(ShelfMode.browse);
+              return KeyEventResult.handled;
+            }
+            if (context.canPop()) context.pop();
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.tab && snapshot != null) {
+            controller.setMode(ShelfMode.select);
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Scaffold(
         appBar: AppBar(
           title: Text(title),
           actions: <Widget>[
@@ -544,10 +692,13 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                 actionLabel: '去登录',
                 onAction: () => context.go('/sign-in'),
               )
-            : RefreshIndicator(
-                onRefresh: () => ref.read(shelfProvider.notifier).reload(),
-                child: _body(async, editor, snapshot, draft, localComics),
+            : _selectionSurface(
+                RefreshIndicator(
+                  onRefresh: () => ref.read(shelfProvider.notifier).reload(),
+                  child: _body(async, editor, snapshot, draft, localComics),
+                ),
               ),
+        ),
       ),
     );
   }
@@ -624,6 +775,7 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         : (List<ShelfItem>.of(displayLevel.siblings)..sort(
             (left, right) => _compareShelfItems(left, right, displayLevel),
           ));
+    _visibleSiblings = siblings;
     final refreshError = async.hasError
         ? describeShelfError(async.error!)
         : null;
@@ -713,20 +865,27 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
               delegate: IdentityChildDelegate<ShelfItem>(
                 items: siblings,
                 revision: (level, layout.tileWidth),
-                itemBuilder: (_, item, index) => ShelfTile(
-                  editorKey: _editorKey,
-                  item: item,
-                  index: index,
-                  siblings: siblings,
-                  book: item.isBook ? displayLevel.bookById[item.bookId] : null,
-                  folder: item.isBook
-                      ? null
-                      : level.folderPreviews[item.folderId],
-                  tileWidth: layout.tileWidth,
-                  onOpenBook: _openBook,
-                  onOpenFolder: _openFolder,
-                  selectable: (item.bookId ?? 0) >= 0,
-                  onBookContextMenu: _showBookMenu,
+                itemBuilder: (_, item, index) => KeyedSubtree(
+                  key: _itemKey(item),
+                  child: ShelfTile(
+                    editorKey: _editorKey,
+                    item: item,
+                    index: index,
+                    siblings: siblings,
+                    book: item.isBook
+                        ? displayLevel.bookById[item.bookId]
+                        : null,
+                    folder: item.isBook
+                        ? null
+                        : level.folderPreviews[item.folderId],
+                    tileWidth: layout.tileWidth,
+                    onOpenBook: _openBook,
+                    onOpenFolder: _openFolder,
+                    selectable: (item.bookId ?? 0) >= 0,
+                    onBookContextMenu: _showBookMenu,
+                    onModifiedSelection: (item, shift) =>
+                        _modifiedSelect(item, siblings, shift),
+                  ),
                 ),
               ),
             ),
@@ -760,14 +919,25 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                 );
               }
               final selected = _state.selected.contains(item.key);
-              return BookListRow(
-                book: book,
-                onSecondaryTap: (position) => _showBookMenu(book, position),
-                selected: selected,
-                onLongPress: () => _editor.beginSelection(item),
-                onTap: () => _state.mode == ShelfMode.select
-                    ? _editor.toggleSelection(item)
-                    : _openBook(book),
+              return KeyedSubtree(
+                key: _itemKey(item),
+                child: BookListRow(
+                  book: book,
+                  onSecondaryTap: (position) => _showBookMenu(book, position),
+                  selected: selected,
+                  onLongPress: () => _editor.beginSelection(item),
+                  onTap: () => _state.mode == ShelfMode.select
+                      ? _editor.toggleSelection(item)
+                      : (HardwareKeyboard.instance.isControlPressed ||
+                                HardwareKeyboard.instance.isMetaPressed ||
+                                HardwareKeyboard.instance.isShiftPressed)
+                          ? _modifiedSelect(
+                              item,
+                              siblings,
+                              HardwareKeyboard.instance.isShiftPressed,
+                            )
+                          : _openBook(book),
+                ),
               );
             }
             final title = item.title.trim();

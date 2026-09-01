@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../data/api/models.dart';
 import '../../../shared/layout/book_grid_layout.dart';
 import '../../../shared/widgets/book_cover_grid_item.dart';
+import '../../../shared/widgets/book_context_menu.dart';
 
 /// 打开书籍详情，漫画需带上系列名，详情页据此拉取系列信息。
 ///
@@ -25,7 +27,7 @@ void openBookDetail(
 }
 
 /// 首页分区的静态网格，不滚动，按父级宽度分列。
-class BookGridPreview extends StatelessWidget {
+class BookGridPreview extends ConsumerWidget {
   const BookGridPreview({
     super.key,
     required this.books,
@@ -40,7 +42,7 @@ class BookGridPreview extends StatelessWidget {
   final int maxRows;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
+  Widget build(BuildContext context, WidgetRef ref) => LayoutBuilder(
     builder: (context, constraints) {
       // 内边距已由父级扣除。
       final layout = BookGridLayout.of(
@@ -58,6 +60,12 @@ class BookGridPreview extends StatelessWidget {
             coverHeight: layout.coverHeight,
             rank: showRank ? index + 1 : null,
             onTap: () => onOpen(books[index]),
+            onSecondaryTap: (position) => showBookContextMenu(
+              context: context,
+              ref: ref,
+              book: books[index],
+              globalPosition: position,
+            ),
           ),
         ),
       );

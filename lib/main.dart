@@ -89,21 +89,34 @@ class LightNovelShelfApp extends ConsumerWidget {
                     brightness: appBackground.brightness,
                   ),
                   if (child != null)
-                    switch (defaultTargetPlatform) {
-                      TargetPlatform.linux ||
-                      TargetPlatform.windows ||
-                      TargetPlatform.macOS => MediaQuery.withClampedTextScaling(
-                        minScaleFactor: 1.08,
-                        maxScaleFactor: 1.6,
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1600),
-                            child: child,
-                          ),
-                        ),
+                    CallbackShortcuts(
+                      bindings: <ShortcutActivator, VoidCallback>{
+                        const SingleActivator(LogicalKeyboardKey.escape): () {
+                          rootNavigatorKey.currentState?.maybePop();
+                        },
+                      },
+                      child: Focus(
+                        autofocus: true,
+                        child: switch (defaultTargetPlatform) {
+                          TargetPlatform.linux ||
+                          TargetPlatform.windows ||
+                          TargetPlatform.macOS =>
+                            MediaQuery.withClampedTextScaling(
+                              minScaleFactor: 1.08,
+                              maxScaleFactor: 1.6,
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 1600,
+                                  ),
+                                  child: child,
+                                ),
+                              ),
+                            ),
+                          _ => child,
+                        },
                       ),
-                      _ => child,
-                    }
+                    )
                   else
                     const SizedBox.shrink(),
                 ],

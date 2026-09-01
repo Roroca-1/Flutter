@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/api/models.dart';
@@ -23,6 +24,7 @@ class ShelfTile extends ConsumerWidget {
     required this.onOpenFolder,
     this.selectable = true,
     this.onBookContextMenu,
+    this.onModifiedSelection,
   });
 
   final String editorKey;
@@ -40,6 +42,7 @@ class ShelfTile extends ConsumerWidget {
   final void Function(String folderId) onOpenFolder;
   final bool selectable;
   final void Function(BookListItem book, Offset position)? onBookContextMenu;
+  final void Function(ShelfItem item, bool shift)? onModifiedSelection;
 
   /// 选择模式下点击是切换选中；`open` 为空表示条目已下架，只能被选中。
   void _handleTap(WidgetRef ref, VoidCallback? open) {
@@ -49,6 +52,12 @@ class ShelfTile extends ConsumerWidget {
     }
     final provider = shelfEditorProvider(editorKey);
     final editor = ref.read(provider.notifier);
+    final keyboard = HardwareKeyboard.instance;
+    if (selectable &&
+        (keyboard.isControlPressed || keyboard.isMetaPressed || keyboard.isShiftPressed)) {
+      onModifiedSelection?.call(item, keyboard.isShiftPressed);
+      return;
+    }
     if (ref.read(provider).mode == ShelfMode.select) {
       editor.toggleSelection(item);
       return;
