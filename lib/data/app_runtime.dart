@@ -9,6 +9,7 @@ import 'api/endpoints.dart';
 import 'session/auth_controller.dart';
 import 'session/visitor_id.dart';
 import 'settings/app_settings.dart';
+import 'repositories/user_font_repository.dart';
 
 /// 应用启动时一次性构建的运行时依赖。
 class AppRuntime {
@@ -34,6 +35,14 @@ class AppRuntime {
     final credentials = SecureCredentialStore();
     final keyValueStore = await PreferencesKeyValueStore.open();
     final settings = await SettingsController.load(keyValueStore);
+    final customFontPath = settings.settings.customReaderFontPath;
+    if (customFontPath != null) {
+      try {
+        await UserFontRepository.instance.load(customFontPath);
+      } catch (_) {
+        // A removed or invalid font never blocks application startup.
+      }
+    }
     final scheduler = RateLimitRequestScheduler();
 
     final userAgent = await _backendUserAgent();

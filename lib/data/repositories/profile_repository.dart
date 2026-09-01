@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
@@ -15,6 +17,15 @@ class ProfileController extends AsyncNotifier<UserProfile?> {
       authSnapshotProvider.select((snapshot) => snapshot.isAuthenticated),
     );
     if (!authenticated) return null;
+    final cached = await ref.read(bookMetadataCacheProvider).readProfile();
+    if (cached != null) {
+      unawaited(_refreshInBackground());
+      return cached;
+    }
+    return _loadFresh();
+  }
+
+  Future<UserProfile> _loadFresh() async {
     var profile = await _api.getMyProfile();
     if (!profile.growth.signedToday) {
       try {
@@ -24,14 +35,22 @@ class ProfileController extends AsyncNotifier<UserProfile?> {
         // 自动签到不能阻止应用启动；网络恢复后下次重建资料时会再尝试。
       }
     }
+    await ref.read(bookMetadataCacheProvider).writeProfile(profile);
     return profile;
   }
 
+  Future<void> _refreshInBackground() async {
+    try {
+      state = AsyncValue<UserProfile?>.data(await _loadFresh());
+    } catch (_) {
+      // Cached profile remains usable while offline.
+    }
+  }
+
   Future<void> reload() async {
-    state = const AsyncValue<UserProfile?>.loading();
     state = await AsyncValue.guard(() async {
       if (!ref.read(authSnapshotProvider).isAuthenticated) return null;
-      return _api.getMyProfile();
+      return _loadFresh();
     });
   }
 

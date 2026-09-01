@@ -75,6 +75,7 @@ class SettingsRow extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.enabled = true,
+    this.optionTextStyle,
   });
 
   final String title;
@@ -83,6 +84,7 @@ class SettingsRow extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool enabled;
+  final TextStyle? Function(T value)? optionTextStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +262,10 @@ class SettingsPickerRow<T> extends StatelessWidget {
                         for (final option in options)
                           RadioListTile<T>(
                             value: option.$1,
-                            title: Text(option.$2),
+                            title: Text(
+                              option.$2,
+                              style: optionTextStyle?.call(option.$1),
+                            ),
                           ),
                         const SizedBox(height: 8),
                       ],
@@ -274,7 +279,12 @@ class SettingsPickerRow<T> extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Text(label, style: TextStyle(color: colors.onSurfaceVariant)),
+          Text(
+            label,
+            style: (optionTextStyle?.call(value) ?? const TextStyle()).copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(width: 4),
           Icon(Icons.expand_more, size: 20, color: colors.onSurfaceVariant),
         ],

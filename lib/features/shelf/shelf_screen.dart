@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:romanize/romanize.dart';
+import 'package:kana_kit/kana_kit.dart';
+import 'package:pinyin/pinyin.dart';
 
 import '../../data/api/models.dart';
 import '../../data/providers.dart';
@@ -35,9 +34,9 @@ class ShelfScreen extends ConsumerStatefulWidget {
 }
 
 class _ShelfScreenState extends ConsumerState<ShelfScreen> {
-  bool _romanizerReady = false;
-  bool _romanizerLoading = false;
   final Map<String, String> _sortKeyCache = <String, String>{};
+  static const KanaKit _kana = KanaKit();
+  static final RegExp _kanaPattern = RegExp(r'[\u3040-\u30ff]');
 
   ShelfSortSetting get _sort => ref.read(appSettingsProvider).shelfSort;
 
@@ -52,21 +51,6 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
     ref
         .read(settingsControllerProvider)
         .update((settings) => settings.copyWith(shelfSort: value));
-    final needsRomanizer =
-        value == ShelfSortSetting.titleAscending ||
-        value == ShelfSortSetting.titleDescending;
-    if (!needsRomanizer || _romanizerReady || _romanizerLoading) return;
-    _romanizerLoading = true;
-    unawaited(
-      TextRomanizer.ensureInitialized().then((_) {
-        if (!mounted) return;
-        setState(() {
-          _romanizerReady = true;
-          _romanizerLoading = false;
-          _sortKeyCache.clear();
-        });
-      }),
-    );
   }
 
   List<String> get _parents => widget.parents;
@@ -80,8 +64,11 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
 
   String _titleSortKey(String title) => _sortKeyCache.putIfAbsent(title, () {
     final normalized = title.trim().toLowerCase();
-    if (!_romanizerReady || normalized.isEmpty) return normalized;
-    return TextRomanizer.romanize(normalized).toLowerCase();
+    if (normalized.isEmpty) return normalized;
+    if (_kanaPattern.hasMatch(normalized)) {
+      return _kana.toRomaji(normalized).toLowerCase();
+    }
+    return PinyinHelper.getPinyin(normalized, separator: '').toLowerCase();
   });
 
   String _itemTitle(ShelfItem item, ShelfLevel level) =>
@@ -399,9 +386,14 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
             onPressed: () => _editor.selectAll(siblings),
             child: const Text('全选'),
           ),
+          IconButton(
+            tooltip: '移出书架',
+            onPressed: books == 0 ? null : _removeItems,
+            icon: Icon(Icons.delete_outline, color: colors.error),
+          ),
           TextButton(
             onPressed: () => _editor.setMode(ShelfMode.browse),
-            child: const Text('完成'),
+            child: const Text('取消'),
           ),
         ],
       ),
@@ -419,14 +411,6 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
         ),
       ),
     );
-    if ((shelfPreferences.$1 == ShelfSortSetting.titleAscending ||
-            shelfPreferences.$1 == ShelfSortSetting.titleDescending) &&
-        !_romanizerReady &&
-        !_romanizerLoading) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _setSort(shelfPreferences.$1);
-      });
-    }
     final authenticated = ref.watch(authSnapshotProvider).isAuthenticated;
     final async = ref.watch(shelfProvider);
     final editor = ref.watch(shelfEditorProvider(_editorKey));
@@ -466,8 +450,8 @@ class _ShelfScreenState extends ConsumerState<ShelfScreen> {
                     ),
                 icon: Icon(
                   _seriesView
-                      ? Icons.library_books_outlined
-                      : Icons.auto_awesome_mosaic_outlined,
+                      ? Icons.folder_outlined
+                      : Icons.description_outlined,
                 ),
               ),
             if (snapshot != null && editor.mode == ShelfMode.browse)

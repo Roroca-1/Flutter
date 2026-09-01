@@ -34,8 +34,7 @@ class _CacheSettingsScreenState extends ConsumerState<CacheSettingsScreen> {
       BookImage.clearRevealCache();
       PaintingBinding.instance.imageCache..clear()..clearLiveImages();
       await appImageCacheManager.emptyCache();
-      await ref.read(bookMetadataCacheProvider).clear();
-      await ref.read(bookMetadataCacheProvider).clearHome();
+      await ref.read(bookMetadataCacheProvider).clearDataViews();
       await _removeReaderFontCache();
       if (mounted) await showAppAlert(context: context, title: '缓存已清除', message: '图片、书架、阅读历史、首页内容和章节字体缓存已清除。');
     } catch (_) {

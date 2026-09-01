@@ -57,7 +57,8 @@ dependencies:
   # GlobalCupertinoLocalizations 引入的 Cupertino 组件引用 CupertinoIcons 字形。
   cupertino_icons: ^1.0.8
   markdown: ^7.3.1
-  romanize: ^0.0.3
+  pinyin: ^3.3.0
+  kana_kit: ^2.1.1
 
 dev_dependencies:
   flutter_test:

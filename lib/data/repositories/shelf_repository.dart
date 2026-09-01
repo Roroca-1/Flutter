@@ -34,7 +34,21 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
       authSnapshotProvider.select((snapshot) => snapshot.isAuthenticated),
     );
     if (!authenticated) return null;
+    final cached = await ref.read(bookMetadataCacheProvider).readShelf();
+    if (cached != null) {
+      unawaited(_refreshInBackground());
+      return cached;
+    }
     return _load();
+  }
+
+  Future<void> _refreshInBackground() async {
+    try {
+      final snapshot = await _load();
+      state = AsyncValue<ShelfSnapshot?>.data(snapshot);
+    } catch (_) {
+      // Keep the cached shelf visible when background refresh fails.
+    }
   }
 
   Future<ShelfSnapshot> _hydrate(List<ShelfItem> items, String? version) async {
@@ -63,6 +77,7 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
     if (generation != _mutationGeneration) {
       return state.value ?? snapshot;
     }
+    await ref.read(bookMetadataCacheProvider).writeShelf(snapshot);
     return snapshot;
   }
 
@@ -108,6 +123,7 @@ class ShelfController extends AsyncNotifier<ShelfSnapshot?> {
       if (generation == _mutationGeneration) {
         state = AsyncValue<ShelfSnapshot?>.data(snapshot);
       }
+      await ref.read(bookMetadataCacheProvider).writeShelf(snapshot);
       return snapshot;
     });
     _saveQueue = operation.then((_) {}, onError: (_) {});

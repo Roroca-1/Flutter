@@ -44,6 +44,17 @@ class UserGrowth {
   final int? nextLevelExperience;
   final int signInStreak;
   final bool signedToday;
+
+  Map<String, Object?> encode() => <String, Object?>{
+    'Exp': experience,
+    'Coin': coin,
+    'Level': level,
+    'GrowthLevel': growthLevel,
+    'CurrentLevelExp': currentLevelExperience,
+    'NextLevelExp': nextLevelExperience,
+    'SignStreak': signInStreak,
+    'TodaySigned': signedToday,
+  };
 }
 
 class UserProfile {
@@ -94,6 +105,18 @@ class UserProfile {
       ),
     );
   }
+
+  Map<String, Object?> encode() => <String, Object?>{
+    'Id': id,
+    'UserName': userName,
+    'Avatar': avatarUrl,
+    'Email': email,
+    'InviteCode': inviteCode,
+    'Role': <String, Object?>{'Name': groupName},
+    'UnreadNotificationCount': unreadNotificationCount,
+    'RegisterAt': registeredAt?.toUtc().toIso8601String(),
+    'Growth': growth.encode(),
+  };
 }
 
 class DailyCheckInResult {

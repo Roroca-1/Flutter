@@ -24,10 +24,12 @@ class BookListRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final author = book.authorName?.trim();
     final secondary = subtitle ??
-        (book.authorName?.trim().isNotEmpty == true
-            ? book.authorName!
-            : '更新于 ${formatShortDate(book.lastUpdatedAt)}');
+        <String>[
+          if (author?.isNotEmpty == true) author!,
+          '更新于 ${formatShortDate(book.lastUpdatedAt)}',
+        ].join(' · ');
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -68,7 +70,7 @@ class BookListRow extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       secondary,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,

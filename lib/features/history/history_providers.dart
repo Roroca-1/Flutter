@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -113,11 +114,33 @@ class HistoryController extends AsyncNotifier<HistoryState> {
       authSnapshotProvider.select((snapshot) => snapshot.isAuthenticated),
     );
     if (!authenticated) return HistoryState.empty;
+    final cached = await ref.read(bookMetadataCacheProvider).readHistoryPreview();
+    if (cached != null) {
+      unawaited(_refreshInBackground());
+      return HistoryState(
+        novel: HistoryTabState(
+          ids: cached.novel,
+          items: cached.novelItems,
+          loadedPages: cached.novel.isEmpty ? 0 : 1,
+        ),
+        comic: HistoryTabState(
+          ids: cached.comic,
+          items: cached.comicItems,
+          loadedPages: cached.comic.isEmpty ? 0 : 1,
+        ),
+      );
+    }
+    return _loadFresh();
+  }
+
+  Future<HistoryState> _loadFirstPages(
+    List<int> novelIds,
+    List<int> comicIds,
+  ) async {
     final generation = ++_generation;
-    final history = await _api.getReadHistory();
     final indexed = HistoryState(
-      novel: HistoryTabState(ids: history.novelIds),
-      comic: HistoryTabState(ids: history.comicIds),
+      novel: HistoryTabState(ids: novelIds),
+      comic: HistoryTabState(ids: comicIds),
     );
     // 两个分页的第一页同时预取，切换分段控件时无需等待。
     final pages = await Future.wait<HistoryTabState>(<Future<HistoryTabState>>[
@@ -126,6 +149,27 @@ class HistoryController extends AsyncNotifier<HistoryState> {
     ]);
     if (generation != _generation) return state.value ?? indexed;
     return HistoryState(novel: pages[0], comic: pages[1]);
+  }
+
+  Future<HistoryState> _loadFresh() async {
+    final history = await _api.getReadHistory();
+    final result = await _loadFirstPages(history.novelIds, history.comicIds);
+    await ref.read(bookMetadataCacheProvider).writeHistoryPreview(
+      novel: history.novelIds,
+      comic: history.comicIds,
+      novelItems: result.novel.items,
+      comicItems: result.comic.items,
+    );
+    return result;
+  }
+
+  Future<void> _refreshInBackground() async {
+    try {
+      final fresh = await _loadFresh();
+      state = AsyncValue<HistoryState>.data(fresh);
+    } catch (_) {
+      // Keep cached history visible until a later refresh succeeds.
+    }
   }
 
   Future<HistoryTabState> _guardedPage(

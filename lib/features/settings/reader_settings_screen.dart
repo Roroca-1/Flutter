@@ -204,6 +204,17 @@ class ReaderSettingsContent extends ConsumerWidget {
                     (ReaderFontSetting.monospace, '等宽字体'),
                     (ReaderFontSetting.custom, '导入的字体'),
                   ],
+                  optionTextStyle: (font) => TextStyle(
+                    fontFamily: switch (font) {
+                      ReaderFontSetting.system => null,
+                      ReaderFontSetting.serif => 'serif',
+                      ReaderFontSetting.sansSerif => 'sans-serif',
+                      ReaderFontSetting.monospace => 'monospace',
+                      ReaderFontSetting.custom => UserFontRepository.instance
+                          .loadedFamily(settings.customReaderFontPath),
+                    },
+                    fontSize: 17,
+                  ),
                   onChanged: (value) {
                     if (value == ReaderFontSetting.custom &&
                         settings.customReaderFontPath == null) {

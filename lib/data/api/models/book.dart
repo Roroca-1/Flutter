@@ -82,7 +82,10 @@ class BookListItem {
       seriesTitle: asNullableString(book['SeriesTitle']),
       coverUrl: cover.url,
       coverPlaceholder: cover.placeholder,
-      authorName: asNullableString(book['UserName']),
+      // `UserName` is the uploader. Lists should show the work author instead.
+      authorName:
+          asNullableString(book['Author']) ??
+          BookClassification.decode(book['Extra']).author,
       lastUpdatedAt: asDate(book['LastUpdatedAt']),
       level: asNullableInt(book['Level']),
       interiorLevel: asNullableInt(book['InteriorLevel']),
@@ -96,7 +99,7 @@ class BookListItem {
     'Title': title,
     'SeriesTitle': seriesTitle,
     'Cover': coverUrl,
-    'UserName': authorName,
+    'Author': authorName,
     'LastUpdatedAt': lastUpdatedAt.toUtc().toIso8601String(),
     'Level': level,
     'InteriorLevel': interiorLevel,

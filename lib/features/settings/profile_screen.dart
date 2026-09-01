@@ -32,18 +32,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _signingOut = false;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      // 已有缓存时重新拉取，保证经验值与签到状态最新。
-      if (ref.read(profileProvider).hasValue) {
-        ref.read(profileProvider.notifier).reload();
-      }
-    });
-  }
-
-  @override
   void dispose() {
     _copyTimer?.cancel();
     super.dispose();

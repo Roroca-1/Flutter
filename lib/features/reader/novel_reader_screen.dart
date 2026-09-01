@@ -304,9 +304,11 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
         lineSpace: settings.readerLineSpace,
         firstLineIndent: settings.readerFirstLineIndent,
         justify: settings.readerJustify,
-        fontFamily: chapterFont ?? selected,
+        // A user choice must be the primary family; chapter fonts remain a
+        // fallback for books that use private or uncommon glyphs.
+        fontFamily: selected ?? chapterFont,
         fontFamilyFallback: <String>[
-          if (chapterFont != null && selected != null) selected,
+          if (chapterFont != null && selected != null) chapterFont,
           'sans-serif',
           'serif',
         ],
