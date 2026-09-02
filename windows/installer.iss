@@ -21,7 +21,7 @@ DefaultGroupName={#AppName}
 AllowNoIcons=yes
 DisableProgramGroupPage=auto
 OutputDir=..\dist
-OutputBaseFilename=LightNovelShelfPlus-{#ReleaseTag}-x86_64
+OutputBaseFilename=LightNovelShelfPlus-{#ReleaseTag}-x86_64-setup
 SetupIconFile=runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 Compression=lzma2/ultra64
@@ -36,7 +36,7 @@ RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加快捷方式："; Flags: unchecked
