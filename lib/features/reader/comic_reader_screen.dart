@@ -108,6 +108,11 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
   ScrollController? _scrollController;
   ReaderViewMode? _mode;
 
+  /// 连续模式在边界继续拖动一段距离才换章，避免普通回弹误触。
+  static const double _chapterOverscrollThreshold = 72;
+  double _chapterOverscroll = 0;
+  bool _changingChapterFromScroll = false;
+
   @override
   void initState() {
     super.initState();
@@ -191,7 +196,7 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
     super.dispose();
   }
 
-  Future<void> _loadChapter() async {
+  Future<void> _loadChapter({bool openAtEnd = false}) async {
     final version = beginRequest();
     setState(() {
       loading = true;
@@ -216,7 +221,9 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
       if (index < 0) throw const ApiError('章节不存在。', ApiErrorCategory.server);
       final chapter = chapters[index];
 
-      final target = _resolveInitialPage(chapter, info?.readPosition);
+      var target = openAtEnd
+          ? math.max(0, chapter.pageCount - 1)
+          : _resolveInitialPage(chapter, info?.readPosition);
       var total = chapter.pageCount;
       var skip = getComicPageBatchStart(target, math.max(total, 1), _batchSize);
       var content = await _api.getComicContent(
@@ -229,6 +236,7 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
       // 目录里的页数偶尔滞后，以正文返回的 total 为准并按需重取。
       if (content.chapter.total != total) {
         total = content.chapter.total;
+        if (openAtEnd) target = math.max(0, total - 1);
         final corrected = getComicPageBatchStart(
           target,
           math.max(total, 1),
@@ -555,12 +563,75 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
     );
   }
 
-  Future<void> _openChapterIndex(int index) async {
+  void _seekToPage(int oneBasedPage) {
+    if (_slots.isEmpty) return;
+    final page = (oneBasedPage - 1).clamp(0, _slots.length - 1).toInt();
+    final pageController = _pageController;
+    if (_mode == ReaderViewMode.paged &&
+        pageController != null &&
+        pageController.hasClients) {
+      final target = _dualPaged ? _spreadIndexOf(page) : page;
+      turnReaderPage(
+        pageController,
+        target,
+        ref.read(appSettingsProvider).comicReader.pageTurnAnimation,
+      );
+      return;
+    }
+    final scrollController = _scrollController;
+    if (scrollController == null || !scrollController.hasClients) return;
+    scrollController.animateTo(
+      _offsetForPage(page).clamp(
+        0.0,
+        scrollController.position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  bool _onContinuousScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollEndNotification) {
+      _chapterOverscroll = 0;
+      return false;
+    }
+    if (notification is! OverscrollNotification ||
+        _changingChapterFromScroll ||
+        loading) {
+      return false;
+    }
+    final metrics = notification.metrics;
+    final atTop = metrics.pixels <= metrics.minScrollExtent;
+    final atBottom = metrics.pixels >= metrics.maxScrollExtent;
+    final wantsPrevious = atTop && notification.overscroll < 0;
+    final wantsNext = atBottom && notification.overscroll > 0;
+    if (!wantsPrevious && !wantsNext) {
+      _chapterOverscroll = 0;
+      return false;
+    }
+    _chapterOverscroll += notification.overscroll.abs();
+    if (_chapterOverscroll < _chapterOverscrollThreshold) return false;
+    final target = wantsPrevious ? _chapterIndex - 1 : _chapterIndex + 1;
+    if (target < 0 || target >= _chapters.length) {
+      _chapterOverscroll = 0;
+      return false;
+    }
+    _changingChapterFromScroll = true;
+    _chapterOverscroll = 0;
+    unawaited(
+      _openChapterIndex(target, openAtEnd: wantsPrevious).whenComplete(() {
+        if (mounted) _changingChapterFromScroll = false;
+      }),
+    );
+    return false;
+  }
+
+  Future<void> _openChapterIndex(int index, {bool openAtEnd = false}) async {
     if (index < 0 || index >= _chapters.length) return;
     await _commitPosition();
     if (!mounted) return;
     setState(() => _sortNum = _chapters[index].sortNum);
-    await _loadChapter();
+    await _loadChapter(openAtEnd: openAtEnd);
   }
 
   Future<void> _commitPosition() async {
@@ -738,19 +809,27 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
 
   Widget _continuousView() {
     final width = _continuousPageWidth;
-    return ReaderTapZoneLayer(
-      axis: Axis.vertical,
-      onPrevious: () => _turn(-1),
-      onNext: () => _turn(1),
-      onToggleChrome: _toggleChrome,
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _slots.length,
-        itemExtentBuilder: (index, _) => _continuousPageExtent(index),
-        itemBuilder: (context, index) => Center(
-          child: SizedBox(
-            width: width,
-            child: _pageContent(index, width, _continuousPageExtent(index)),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: _toggleChrome,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onContinuousScrollNotification,
+        child: ListView.builder(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          itemCount: _slots.length,
+          itemExtentBuilder: (index, _) => _continuousPageExtent(index),
+          itemBuilder: (context, index) => Center(
+            child: SizedBox(
+              width: width,
+              child: _pageContent(
+                index,
+                width,
+                _continuousPageExtent(index),
+              ),
+            ),
           ),
         ),
       ),
@@ -781,12 +860,18 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen>
         unawaited(showReaderSettingsSheet(context, BookType.comic)),
     onDismiss: () => _chromeVisible.value = false,
     onPreviousChapter: _chapterIndex > 0
-        ? () => unawaited(_openChapterIndex(_chapterIndex - 1))
+        ? () => unawaited(
+            _openChapterIndex(_chapterIndex - 1, openAtEnd: true),
+          )
         : null,
     onNextChapter: _chapterIndex < _chapters.length - 1
         ? () => unawaited(_openChapterIndex(_chapterIndex + 1))
         : null,
     onChapterSelected: (chapter) => unawaited(_openChapterIndex(chapter - 1)),
+    sliderPosition: page + 1,
+    sliderTotal: _slots.length,
+    sliderUnit: '页',
+    onSliderSelected: _seekToPage,
   );
 
   @override

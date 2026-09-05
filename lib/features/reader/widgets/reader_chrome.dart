@@ -77,6 +77,10 @@ class ReaderChrome extends StatelessWidget {
     this.onPreviousChapter,
     this.onNextChapter,
     this.onChapterSelected,
+    this.sliderPosition,
+    this.sliderTotal,
+    this.sliderUnit = '章',
+    this.onSliderSelected,
   });
 
   final bool visible;
@@ -97,6 +101,10 @@ class ReaderChrome extends StatelessWidget {
   final VoidCallback? onPreviousChapter;
   final VoidCallback? onNextChapter;
   final ValueChanged<int>? onChapterSelected;
+  final int? sliderPosition;
+  final int? sliderTotal;
+  final String sliderUnit;
+  final ValueChanged<int>? onSliderSelected;
 
   static const Duration _duration = Duration(milliseconds: 250);
 
@@ -156,6 +164,10 @@ class ReaderChrome extends StatelessWidget {
                 onPreviousChapter: onPreviousChapter,
                 onNextChapter: onNextChapter,
                 onChapterSelected: onChapterSelected,
+                sliderPosition: sliderPosition,
+                sliderTotal: sliderTotal,
+                sliderUnit: sliderUnit,
+                onSliderSelected: onSliderSelected,
               ),
             ),
           ),
@@ -268,6 +280,10 @@ class _ReaderBottomBar extends StatefulWidget {
     required this.onPreviousChapter,
     required this.onNextChapter,
     required this.onChapterSelected,
+    required this.sliderPosition,
+    required this.sliderTotal,
+    required this.sliderUnit,
+    required this.onSliderSelected,
   });
 
   final bool visible;
@@ -285,6 +301,10 @@ class _ReaderBottomBar extends StatefulWidget {
   final VoidCallback? onPreviousChapter;
   final VoidCallback? onNextChapter;
   final ValueChanged<int>? onChapterSelected;
+  final int? sliderPosition;
+  final int? sliderTotal;
+  final String sliderUnit;
+  final ValueChanged<int>? onSliderSelected;
 
   @override
   State<_ReaderBottomBar> createState() => _ReaderBottomBarState();
@@ -304,7 +324,9 @@ class _ReaderBottomBarState extends State<_ReaderBottomBar> {
     super.didUpdateWidget(oldWidget);
     if (!widget.visible ||
         oldWidget.currentChapter != widget.currentChapter ||
-        oldWidget.totalChapters != widget.totalChapters) {
+        oldWidget.totalChapters != widget.totalChapters ||
+        oldWidget.sliderPosition != widget.sliderPosition ||
+        oldWidget.sliderTotal != widget.sliderTotal) {
       _preview.value = null;
     }
   }
@@ -356,16 +378,20 @@ class _ReaderBottomBarState extends State<_ReaderBottomBar> {
                         label: const Text('上一章'),
                       ),
                     ),
-                    if (widget.totalChapters > 1)
+                    if ((widget.sliderTotal ?? widget.totalChapters) > 1)
                       Expanded(
                         flex: 5,
                         child: _ReaderChapterSlider(
                           preview: _preview,
-                          currentChapter: widget.currentChapter,
-                          totalChapters: widget.totalChapters,
+                          currentChapter:
+                              widget.sliderPosition ?? widget.currentChapter,
+                          totalChapters:
+                              widget.sliderTotal ?? widget.totalChapters,
+                          unit: widget.sliderUnit,
                           backgroundColor: widget.backgroundColor,
                           foregroundColor: widget.foregroundColor,
-                          onChapterSelected: widget.onChapterSelected,
+                          onChapterSelected:
+                              widget.onSliderSelected ?? widget.onChapterSelected,
                         ),
                       ),
                     Expanded(
@@ -459,8 +485,10 @@ class _ReaderBottomBarState extends State<_ReaderBottomBar> {
                       : _ReaderChapterPreview(
                           key: const ValueKey<bool>(true),
                           chapter: previewChapter,
-                          totalChapters: widget.totalChapters,
+                          totalChapters:
+                              widget.sliderTotal ?? widget.totalChapters,
                           chapterTitles: widget.chapterTitles,
+                          unit: widget.sliderUnit,
                           backgroundColor: widget.backgroundColor,
                           foregroundColor: widget.foregroundColor,
                         ),
@@ -480,6 +508,7 @@ class _ReaderChapterPreview extends StatelessWidget {
     required this.chapter,
     required this.totalChapters,
     required this.chapterTitles,
+    required this.unit,
     required this.backgroundColor,
     required this.foregroundColor,
   });
@@ -487,10 +516,13 @@ class _ReaderChapterPreview extends StatelessWidget {
   final int chapter;
   final int totalChapters;
   final List<String> chapterTitles;
+  final String unit;
   final Color backgroundColor;
   final Color foregroundColor;
 
   String get _title {
+    if (unit == '%') return '$chapter%';
+    if (unit != '章') return '第 $chapter / $totalChapters $unit';
     if (chapter < 1 || chapter > chapterTitles.length) return '第$chapter章';
     final title = chapterTitles[chapter - 1].trim();
     return title.isEmpty ? '第$chapter章' : title;
@@ -593,6 +625,7 @@ class _ReaderChapterSlider extends StatelessWidget {
     required this.preview,
     required this.currentChapter,
     required this.totalChapters,
+    required this.unit,
     required this.backgroundColor,
     required this.foregroundColor,
     required this.onChapterSelected,
@@ -601,6 +634,7 @@ class _ReaderChapterSlider extends StatelessWidget {
   final ValueNotifier<int?> preview;
   final int currentChapter;
   final int totalChapters;
+  final String unit;
   final Color backgroundColor;
   final Color foregroundColor;
   final ValueChanged<int>? onChapterSelected;
@@ -646,8 +680,9 @@ class _ReaderChapterSlider extends StatelessWidget {
                   .toDouble(),
               min: 1,
               max: totalChapters.toDouble(),
-              semanticFormatterCallback: (value) =>
-                  '第 ${value.round()} 章，共 $totalChapters 章',
+              semanticFormatterCallback: (value) => unit == '%'
+                  ? '阅读进度 ${value.round()}%'
+                  : '第 ${value.round()} $unit，共 $totalChapters $unit',
               onChangeStart: onSelected == null
                   ? null
                   : (value) => preview.value = _chapterAt(value),

@@ -75,6 +75,11 @@ class ReaderContentController {
 
   void nextPage() => _state?._turnFromController(true);
 
+  void seekPage(int oneBasedPage) => _state?._seekPage(oneBasedPage);
+
+  void seekProgress(double progression) =>
+      _state?._seekProgress(progression);
+
   void _attach(_ReaderContentViewState state) => _state = state;
 
   void _detach(_ReaderContentViewState state) {
@@ -268,6 +273,8 @@ class _ReaderContentViewState extends State<ReaderContentView> {
       const ReaderPageStrip<_ChapterSlot>.empty();
   bool _stripDirty = false;
   bool _scrolling = false;
+  double _boundaryOverscroll = 0;
+  bool _boundaryTriggered = false;
 
   /// 已通知上层、窗口尚未平移的那一章。`jumpTo` 与惯性收尾会多次上报落定，用于去重。
   int? _notifiedChapter;
@@ -324,6 +331,8 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     }
     if (widget.sortNum != oldWidget.sortNum) {
       _notifiedChapter = null;
+      _boundaryOverscroll = 0;
+      _boundaryTriggered = false;
     }
     final known = _slotFor(widget.sortNum);
     if (known == null ||
@@ -376,6 +385,8 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     _notifiedChapter = null;
     _pendingSide = 0;
     _pendingEdge = null;
+    _boundaryOverscroll = 0;
+    _boundaryTriggered = false;
     _requested.clear();
     _syncSlots();
   }
@@ -975,6 +986,61 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     if (_ready) _turn(next);
   }
 
+  void _seekPage(int oneBasedPage) {
+    if (!_ready || !widget.paged || _active == null) return;
+    final slot = _active!;
+    final local = (oneBasedPage - 1).clamp(0, slot.columnCount - 1).toInt();
+    final global = _strip.globalPageOf(slot, local);
+    final screen = (_leadingPending + global) ~/ _columns;
+    _applyPage(screen);
+    final controller = _pageController;
+    if (controller != null && controller.hasClients) {
+      turnReaderPage(controller, screen, widget.pageTurnAnimation);
+    }
+  }
+
+  void _seekProgress(double progression) {
+    if (!_ready || widget.paged) return;
+    final controller = _scrollController;
+    if (controller == null || !controller.hasClients) return;
+    final position = controller.position;
+    controller.animateTo(
+      position.minScrollExtent +
+          (position.maxScrollExtent - position.minScrollExtent) *
+              progression.clamp(0.0, 1.0),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  bool _onContinuousScroll(ScrollNotification notification) {
+    if (notification is ScrollEndNotification) {
+      _boundaryOverscroll = 0;
+      _boundaryTriggered = false;
+      _report(force: true);
+      return false;
+    }
+    if (notification is! OverscrollNotification || _boundaryTriggered) {
+      return false;
+    }
+    final atTop = notification.metrics.pixels <=
+        notification.metrics.minScrollExtent;
+    final atBottom = notification.metrics.pixels >=
+        notification.metrics.maxScrollExtent;
+    final previous = atTop && notification.overscroll < 0;
+    final next = atBottom && notification.overscroll > 0;
+    if (!previous && !next) {
+      _boundaryOverscroll = 0;
+      return false;
+    }
+    _boundaryOverscroll += notification.overscroll.abs();
+    if (_boundaryOverscroll >= 72) {
+      _boundaryTriggered = true;
+      widget.onBoundary(next);
+    }
+    return false;
+  }
+
   /// 当前屏上露出加载栏时请求那一章。相邻章的按需请求只有这一个入口：
   /// 翻到加载栏、以及双页时右栏空出来，都走它。
   void _scheduleRequest() {
@@ -1092,14 +1158,20 @@ class _ReaderContentViewState extends State<ReaderContentView> {
   /// 滚动模式按测好的块高逐块建，整章一次性排完会让每次重绘都录一遍全章段落。
   Widget _scrollingContent(_ChapterSlot slot) {
     final geometry = slot.geometry!;
-    return ListView.builder(
-      key: ObjectKey(_scrollController),
-      controller: _scrollController,
-      padding: widget.padding,
-      itemCount: slot.rendered.length,
-      itemExtentBuilder: (index, _) =>
-          geometry.blockBottoms[index] - geometry.blockTops[index],
-      itemBuilder: (context, index) => slot.rendered[index],
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onContinuousScroll,
+      child: ListView.builder(
+        key: ObjectKey(_scrollController),
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: widget.padding,
+        itemCount: slot.rendered.length,
+        itemExtentBuilder: (index, _) =>
+            geometry.blockBottoms[index] - geometry.blockTops[index],
+        itemBuilder: (context, index) => slot.rendered[index],
+      ),
     );
   }
 

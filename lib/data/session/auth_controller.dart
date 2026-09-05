@@ -62,18 +62,15 @@ class AuthController extends ChangeNotifier {
     required ApiClient api,
     required CredentialStore credentials,
     required SignalRConnection signalR,
-    Future<void> Function()? clearSessionData,
     PasswordHasher hasher = const PasswordHasher(),
   }) : _api = api,
        _credentials = credentials,
        _signalR = signalR,
-       _clearSessionData = clearSessionData,
        _hasher = hasher;
 
   final ApiClient _api;
   final CredentialStore _credentials;
   final SignalRConnection _signalR;
-  final Future<void> Function()? _clearSessionData;
   final PasswordHasher _hasher;
 
   int _revision = 0;
@@ -136,8 +133,6 @@ class AuthController extends ChangeNotifier {
 
   Future<void> _discardLocalSession(int expectedRevision) async {
     await _clearCredentials(expectedRevision);
-    if (expectedRevision != _revision) return;
-    await _clearSessionData?.call();
   }
 
   Future<bool> _performRefresh(

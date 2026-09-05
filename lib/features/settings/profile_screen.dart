@@ -222,7 +222,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     children: <Widget>[
       SettingsRow(
         title: _signingOut ? '正在退出…' : '退出登录',
-        description: '从此设备移除登录状态和账号缓存',
+        description: '从此设备移除当前账号的登录状态',
         icon: Icons.logout,
         enabled: !_signingOut,
         onTap: _signOut,

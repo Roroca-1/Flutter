@@ -639,6 +639,16 @@ class _NovelReaderScreenState extends ConsumerState<NovelReaderScreen>
             : null,
         onChapterSelected: (sortNum) =>
             unawaited(_openChapter(sortNum, ReaderOpenPosition.start)),
+        sliderPosition: paged
+            ? (_pages.value.$1 <= 0 ? 1 : _pages.value.$1)
+            : (_progression * 100).round().clamp(1, 100).toInt(),
+        sliderTotal: paged
+            ? (_pages.value.$2 <= 0 ? 1 : _pages.value.$2)
+            : 100,
+        sliderUnit: paged ? '页' : '%',
+        onSliderSelected: paged
+            ? _contentController.seekPage
+            : (value) => _contentController.seekProgress(value / 100),
       ),
     );
     return ReaderImmersiveMode(

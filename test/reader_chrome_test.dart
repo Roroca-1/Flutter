@@ -13,6 +13,10 @@ Widget buildChrome({
   bool nightMode = false,
   bool nightModeLocked = false,
   ValueChanged<int>? onChapterSelected,
+  int? sliderPosition,
+  int? sliderTotal,
+  String sliderUnit = '章',
+  ValueChanged<int>? onSliderSelected,
   VoidCallback? onOpenChapters,
   VoidCallback? onToggleNightMode,
   VoidCallback? onOpenSettings,
@@ -34,6 +38,10 @@ Widget buildChrome({
       onPreviousChapter: () {},
       onNextChapter: () {},
       onChapterSelected: onChapterSelected,
+      sliderPosition: sliderPosition,
+      sliderTotal: sliderTotal,
+      sliderUnit: sliderUnit,
+      onSliderSelected: onSliderSelected,
     ),
   ),
 );
@@ -42,6 +50,30 @@ double sliderValue(WidgetTester tester) =>
     tester.widget<Slider>(find.byType(Slider)).value;
 
 void main() {
+  testWidgets('漫画可把控制条替换为章节内页码', (tester) async {
+    int? selectedPage;
+    await tester.pumpWidget(
+      buildChrome(
+        currentChapter: 3,
+        totalChapters: 8,
+        sliderPosition: 4,
+        sliderTotal: 20,
+        sliderUnit: '页',
+        onSliderSelected: (page) => selectedPage = page,
+      ),
+    );
+
+    expect(sliderValue(tester), 4);
+    final slider = tester.getRect(find.byType(Slider));
+    final gesture = await tester.startGesture(slider.center);
+    await gesture.moveTo(Offset(slider.right, slider.center.dy));
+    await tester.pump(const Duration(milliseconds: 140));
+    expect(find.text('第 20 / 20 页'), findsOneWidget);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(selectedPage, 20);
+  });
+
   testWidgets('拖动章节进度条：气泡给出原始标题，松手才选中目标章节', (tester) async {
     int? selectedChapter;
 
