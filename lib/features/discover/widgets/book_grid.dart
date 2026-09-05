@@ -7,22 +7,20 @@ import '../../../shared/layout/book_grid_layout.dart';
 import '../../../shared/widgets/book_cover_grid_item.dart';
 import '../../../shared/widgets/book_context_menu.dart';
 
-/// 打开书籍详情，漫画需带上系列名，详情页据此拉取系列信息。
-///
-/// [fromSeries] 为来源系列页的名称，详情页返回系列时据此出栈而不是重复压栈。
+/// 打开书籍详情。
 void openBookDetail(
   BuildContext context,
   BookListItem book, {
   String? fromSeries,
 }) {
-  final isComic = book.type == BookType.comic;
-  final query = <String, String>{
-    'type': isComic ? 'Comic' : 'Novel',
-    if (isComic) 'seriesTitle': book.seriesTitle ?? book.title,
-    if (fromSeries != null && fromSeries.isNotEmpty) 'fromSeries': fromSeries,
-  };
   context.push(
-    Uri(path: '/book/${book.id}', queryParameters: query).toString(),
+    Uri(
+      path: '/book/${book.id}',
+      queryParameters: <String, String>{
+        if (fromSeries != null && fromSeries.isNotEmpty)
+          'fromSeries': fromSeries,
+      },
+    ).toString(),
   );
 }
 
