@@ -151,11 +151,32 @@ extension ApiClientAccount on ApiClient {
       ServiceEndpoints.refreshTokenPath,
       body: <String, Object?>{'token': refreshToken},
     );
-    // 该端点用 404 表示会话过期，归入 auth 类别才能触发重新登录引导。
-    ensureOk(response, '登录状态已过期，请重新登录。', authStatuses: const <int>{401, 404});
-    final envelope = asRecord(envelopeOf(response, '登录状态已过期，请重新登录。'), '刷新令牌响应');
-    return asString(
-      envelope['Response'] ?? envelope['response'] ?? envelope['Token'],
+    // 刷新端点的 4xx 均表示这枚刷新令牌不能再使用。服务端在会话过期、
+    // 设备数超限被踢下线等场景可能分别返回 400/401/403/404。
+    ensureOk(
+      response,
+      '登录状态已过期，请重新登录。',
+      authStatuses: const <int>{400, 401, 403, 404},
     );
+    try {
+      final envelope = asRecord(
+        envelopeOf(response, '登录状态已过期，请重新登录。'),
+        '刷新令牌响应',
+      );
+      return asString(
+        envelope['Response'] ?? envelope['response'] ?? envelope['Token'],
+      );
+    } on ApiError catch (error) {
+      // 有些部署以 HTTP 200 + 失败信封报告被撤销的设备会话。
+      if (const <int>{400, 401, 403, 404, -100}.contains(error.status)) {
+        throw ApiError(
+          error.message,
+          ApiErrorCategory.auth,
+          status: error.status,
+          cause: error,
+        );
+      }
+      rethrow;
+    }
   }
 }

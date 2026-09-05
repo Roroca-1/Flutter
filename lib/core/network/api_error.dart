@@ -29,7 +29,7 @@ class RequestCancelledError implements Exception {
 }
 
 final RegExp _authMessagePattern = RegExp(
-  r'401|unauthori[sz]ed|invalid token|no\s*token|notoken|无效token|未登录|授权|unauthorized',
+  r'401|403|unauthori[sz]ed|invalid token|no\s*token|notoken|无效token|未登录|授权|登录(?:状态)?(?:已)?(?:失效|过期)|会话(?:已)?(?:失效|过期)|设备.{0,8}(?:过多|下线|移除)|重新登录',
   caseSensitive: false,
 );
 

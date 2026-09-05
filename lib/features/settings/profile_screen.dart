@@ -213,20 +213,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-      SettingsSection(
-        title: '账号',
-        children: <Widget>[
-          SettingsRow(
-            title: _signingOut ? '正在退出…' : '退出登录',
-            description: '从此设备移除当前账号的登录状态',
-            icon: Icons.logout,
-            enabled: !_signingOut,
-            onTap: _signOut,
-          ),
-        ],
-      ),
+      _accountSection(),
     ];
   }
+
+  Widget _accountSection() => SettingsSection(
+    title: '账号',
+    children: <Widget>[
+      SettingsRow(
+        title: _signingOut ? '正在退出…' : '退出登录',
+        description: '从此设备移除登录状态和账号缓存',
+        icon: Icons.logout,
+        enabled: !_signingOut,
+        onTap: _signOut,
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +255,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ],
                 ),
+                _accountSection(),
               ]
             : _sections(profile),
       ),

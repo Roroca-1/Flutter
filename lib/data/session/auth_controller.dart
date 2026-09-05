@@ -62,15 +62,18 @@ class AuthController extends ChangeNotifier {
     required ApiClient api,
     required CredentialStore credentials,
     required SignalRConnection signalR,
+    Future<void> Function()? clearSessionData,
     PasswordHasher hasher = const PasswordHasher(),
   }) : _api = api,
        _credentials = credentials,
        _signalR = signalR,
+       _clearSessionData = clearSessionData,
        _hasher = hasher;
 
   final ApiClient _api;
   final CredentialStore _credentials;
   final SignalRConnection _signalR;
+  final Future<void> Function()? _clearSessionData;
   final PasswordHasher _hasher;
 
   int _revision = 0;
@@ -124,7 +127,18 @@ class AuthController extends ChangeNotifier {
   static bool _isInvalidRefreshError(Object error) =>
       error is ApiError &&
       error.isAuth &&
-      (error.status == 401 || error.status == 404 || error.status == -100);
+      (error.status == null ||
+          error.status == 400 ||
+          error.status == 401 ||
+          error.status == 403 ||
+          error.status == 404 ||
+          error.status == -100);
+
+  Future<void> _discardLocalSession(int expectedRevision) async {
+    await _clearCredentials(expectedRevision);
+    if (expectedRevision != _revision) return;
+    await _clearSessionData?.call();
+  }
 
   Future<bool> _performRefresh(
     int expectedRevision,
@@ -149,7 +163,7 @@ class AuthController extends ChangeNotifier {
       if (expectedRevision != _revision) return false;
       if (_isInvalidRefreshError(error)) {
         _revision += 1;
-        await _clearCredentials(_revision);
+        await _discardLocalSession(_revision);
         _publish(
           const AuthenticationSnapshot(status: AuthenticationStatus.signedOut),
         );
@@ -247,7 +261,7 @@ class AuthController extends ChangeNotifier {
       const AuthenticationSnapshot(status: AuthenticationStatus.signingIn),
     );
     try {
-      await _clearCredentials(expectedRevision);
+      await _discardLocalSession(expectedRevision);
       final tokens = await _api.login(
         email: normalizedEmail,
         passwordHash: _hasher.sha256Hex(password),
@@ -298,7 +312,7 @@ class AuthController extends ChangeNotifier {
       const AuthenticationSnapshot(status: AuthenticationStatus.registering),
     );
     try {
-      await _clearCredentials(expectedRevision);
+      await _discardLocalSession(expectedRevision);
       final tokens = await _api.register(
         userName: normalizedUserName,
         email: normalizedEmail,
@@ -358,7 +372,7 @@ class AuthController extends ChangeNotifier {
     _publish(
       const AuthenticationSnapshot(status: AuthenticationStatus.signingOut),
     );
-    await _clearCredentials(expectedRevision);
+    await _discardLocalSession(expectedRevision);
     await _signalR.close();
     _publish(
       const AuthenticationSnapshot(status: AuthenticationStatus.signedOut),
